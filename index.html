@@ -13,22 +13,19 @@
 <style>
 :root{
   --ink:#1B2430; --ink-soft:#3E4A59; --paper:#EEF1F4; --panel:#FFFFFF;
-  --line:#D7DCE1; --brass:#B98B34; --brass-deep:#8F6A24; --slate:#5B6B7A;
-  --tier1:#B98B34; --tier2:#3F7D58; --tier3:#94A3AF;
+  --line:#D7DCE1; --brass:#B98B34; --brass-deep:#8F6A24; --slate:#5B6B7A; --pin:#2B3A55;
   color-scheme: light;
 }
 :root:not([data-theme="light"]) {
   @media (prefers-color-scheme: dark) {
     --ink:#EDEFF2; --ink-soft:#B7C0CC; --paper:#12161C; --panel:#1A1F27;
-    --line:#2A313B; --brass:#D3A24E; --brass-deep:#E7BE72; --slate:#8A97A5;
-    --tier1:#D3A24E; --tier2:#5FA378; --tier3:#5B6673;
+    --line:#2A313B; --brass:#D3A24E; --brass-deep:#E7BE72; --slate:#8A97A5; --pin:#7C93B8;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"]{
   --ink:#EDEFF2; --ink-soft:#B7C0CC; --paper:#12161C; --panel:#1A1F27;
-  --line:#2A313B; --brass:#D3A24E; --brass-deep:#E7BE72; --slate:#8A97A5;
-  --tier1:#D3A24E; --tier2:#5FA378; --tier3:#5B6673;
+  --line:#2A313B; --brass:#D3A24E; --brass-deep:#E7BE72; --slate:#8A97A5; --pin:#7C93B8;
   color-scheme: dark;
 }
 *{box-sizing:border-box;}
@@ -82,7 +79,7 @@ select{
 .reset-link{font-size:12.5px; color:var(--slate); text-decoration:underline; cursor:pointer; background:none; border:none; padding:6px 2px; align-self:flex-end;}
 
 /* --------- map hero --------- */
-#map{width:100%; height:58vh; min-height:380px; background:#dfe3e6;}
+#map{width:100%; height:58vh; min-height:380px; background:#dfe3e6; position:relative;}
 .marker-pin{border-radius:50%; border:1.5px solid #fff; box-shadow:0 1px 2px rgba(0,0,0,.4);}
 .leaflet-popup-content{font-family:'Inter',sans-serif; font-size:13px;}
 
@@ -97,9 +94,7 @@ thead th.sorted{color:var(--brass-deep);}
 tbody td{padding:8px 10px; border-bottom:1px solid var(--line); white-space:nowrap;}
 tbody tr{cursor:pointer;}
 tbody tr:hover{background:var(--panel);}
-.tier-dot{display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:7px;}
 .num{text-align:right;}
-.score-cell{font-weight:700; color:var(--brass-deep);}
 
 /* --------- detail panel --------- */
 .detail-overlay{
@@ -116,13 +111,8 @@ tbody tr:hover{background:var(--panel);}
   float:right; background:none; border:1px solid var(--line); border-radius:6px;
   width:30px; height:30px; font-size:16px; cursor:pointer; color:var(--ink);
 }
-.d-rank{font-size:12.5px; color:var(--slate); font-weight:600;}
 .d-addr{font-size:21px; font-weight:600; margin:2px 0 2px; font-family:'Fraunces',serif;}
-.d-sub{font-size:13.5px; color:var(--ink-soft); margin-bottom:14px;}
-.d-score-badge{
-  display:inline-block; padding:4px 11px; border-radius:20px; font-weight:700; font-size:13px;
-  background:color-mix(in srgb, var(--brass) 18%, transparent); color:var(--brass-deep); margin-bottom:16px;
-}
+.d-sub{font-size:13.5px; color:var(--ink-soft); margin-bottom:16px;}
 .stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px 16px; margin-bottom:18px;}
 .stat{border-top:1px solid var(--line); padding-top:6px;}
 .stat-label{font-size:11px; color:var(--slate);}
@@ -140,6 +130,8 @@ tbody tr:hover{background:var(--panel);}
 .btn.primary{background:var(--ink); color:var(--panel); border-color:var(--ink);}
 .btn.brass{background:var(--brass); color:#241a06; border-color:var(--brass);}
 .om-box{border:1px dashed var(--line); border-radius:8px; padding:12px; font-size:13.5px;}
+.excerpt-gallery{display:flex; flex-direction:column; gap:10px;}
+.excerpt-gallery img{width:100%; border:1px solid var(--line); border-radius:6px; display:block; cursor:zoom-in;}
 .contact-line{font-size:13px; color:var(--ink-soft); line-height:1.6;}
 ::-webkit-scrollbar{width:9px;}
 ::-webkit-scrollbar-thumb{background:var(--line); border-radius:6px;}
@@ -197,25 +189,25 @@ tbody tr:hover{background:var(--panel);}
 
   <div class="f-group">
     <span class="f-label">Building SF</span>
-    <div class="f-range"><input type="number" id="sfMin" placeholder="Min"><span>–</span><input type="number" id="sfMax" placeholder="Max"></div>
+    <div class="f-range"><input type="text" inputmode="numeric" id="sfMin" placeholder="Min"><span>–</span><input type="text" inputmode="numeric" id="sfMax" placeholder="Max"></div>
   </div>
   <div class="f-group">
     <span class="f-label">Price</span>
-    <div class="f-range"><input type="number" id="priceMin" placeholder="Min $"><span>–</span><input type="number" id="priceMax" placeholder="Max $"></div>
+    <div class="f-range"><input type="text" inputmode="numeric" id="priceMin" placeholder="Min $"><span>–</span><input type="text" inputmode="numeric" id="priceMax" placeholder="Max $"></div>
   </div>
   <div class="f-group">
     <span class="f-label">Land Size (ac)</span>
-    <div class="f-range"><input type="number" step="0.1" id="landMin" placeholder="Min"><span>–</span><input type="number" step="0.1" id="landMax" placeholder="Max"></div>
+    <div class="f-range"><input type="text" inputmode="decimal" id="landMin" placeholder="Min"><span>–</span><input type="text" inputmode="decimal" id="landMax" placeholder="Max"></div>
   </div>
   <div class="f-group">
     <span class="f-label">$/PSF Building</span>
-    <div class="f-range"><input type="number" id="psfMin" placeholder="Min"><span>–</span><input type="number" id="psfMax" placeholder="Max"></div>
+    <div class="f-range"><input type="text" inputmode="decimal" id="psfMin" placeholder="Min"><span>–</span><input type="text" inputmode="decimal" id="psfMax" placeholder="Max"></div>
   </div>
 
   <div class="f-group">
     <span class="f-label">Sort</span>
     <select id="sortSel">
-      <option value="rank">Opportunity Rank</option>
+      <option value="address-asc">Address (A → Z)</option>
       <option value="price-asc">Price (low → high)</option>
       <option value="price-desc">Price (high → low)</option>
       <option value="psf-asc">$/PSF Building (low → high)</option>
@@ -235,7 +227,6 @@ tbody tr:hover{background:var(--panel);}
   <table id="propTable">
     <thead>
       <tr>
-        <th data-key="rank">Rank</th>
         <th data-key="address">Address</th>
         <th data-key="city">City</th>
         <th data-key="county">County</th>
@@ -244,7 +235,6 @@ tbody tr:hover{background:var(--panel);}
         <th data-key="price" class="num">Price</th>
         <th data-key="psfBuilding" class="num">$/PSF Bldg</th>
         <th data-key="psfLand" class="num">$/PSF Land</th>
-        <th data-key="score" class="num">Score</th>
       </tr>
     </thead>
     <tbody id="tableBody"></tbody>
@@ -300,19 +290,17 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
   try { OMS = await loadJSON('/oms.json'); } catch(e) { OMS = {}; }
 
   let activeCounties = new Set();
-  let sortMode = 'rank';
+  let sortMode = 'address-asc';
   let searchTerm = '';
   let selectedId = null;
   let filterState = { sfMin:null, sfMax:null, priceMin:null, priceMax:null, landMin:null, landMax:null, psfMin:null, psfMax:null };
-  let sortDir = { rank: 1 };
+  let sortDir = {};
 
   const counties = [...new Set(DATA.map(d=>d.county))].sort();
 
-  function tierOf(rank){ if(rank<=30) return 1; if(rank<=100) return 2; return 3; }
-  function getCss(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim() || '#94A3AF'; }
-  function tierColor(rank){ const t=tierOf(rank); return t===1?getCss('--tier1'):t===2?getCss('--tier2'):getCss('--tier3'); }
   function fmtMoney(n){ return '$'+n.toLocaleString('en-US'); }
   function fmtSF(n){ return n.toLocaleString('en-US'); }
+  function getCss(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim() || '#2B3A55'; }
 
   const chipRow = document.getElementById('countyChips');
   counties.forEach(c=>{
@@ -327,10 +315,47 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
     chipRow.appendChild(chip);
   });
 
+  // ---- live number formatting for the range filter inputs ----
+  // sf/price: whole numbers, comma-grouped ("1,000", "$1,000,000")
+  // land/psf: decimals allowed, comma-grouped integer part ("1,000.5", "$2.50")
+  const rangeConfig = {
+    sfMin:{prefix:'',decimals:false}, sfMax:{prefix:'',decimals:false},
+    priceMin:{prefix:'$',decimals:false}, priceMax:{prefix:'$',decimals:false},
+    landMin:{prefix:'',decimals:true}, landMax:{prefix:'',decimals:true},
+    psfMin:{prefix:'$',decimals:true}, psfMax:{prefix:'$',decimals:true},
+  };
+  function parseFormatted(str){
+    if(!str) return null;
+    const cleaned = str.replace(/[^0-9.]/g, '');
+    if(cleaned === '' || cleaned === '.') return null;
+    const n = parseFloat(cleaned);
+    return isNaN(n) ? null : n;
+  }
+  function formatLive(str, cfg){
+    let cleaned = str.replace(/[^0-9.]/g, '');
+    if(!cfg.decimals) cleaned = cleaned.replace(/\./g, '');
+    // keep only the first decimal point
+    const firstDot = cleaned.indexOf('.');
+    if(firstDot !== -1){
+      cleaned = cleaned.slice(0, firstDot+1) + cleaned.slice(firstDot+1).replace(/\./g, '');
+    }
+    if(cleaned === '') return '';
+    let [intPart, decPart] = cleaned.split('.');
+    intPart = intPart.replace(/^0+(?=\d)/, '');
+    const withCommas = intPart === '' ? '' : parseInt(intPart, 10).toLocaleString('en-US');
+    let out = cfg.prefix + (withCommas || (intPart === '' ? '' : '0'));
+    if(decPart !== undefined) out += '.' + decPart;
+    return out;
+  }
+
   const rangeIds = ['sfMin','sfMax','priceMin','priceMax','landMin','landMax','psfMin','psfMax'];
   rangeIds.forEach(id=>{
-    document.getElementById(id).addEventListener('input', (e)=>{
-      filterState[id] = e.target.value === '' ? null : parseFloat(e.target.value);
+    const el = document.getElementById(id);
+    const cfg = rangeConfig[id];
+    el.addEventListener('input', (e)=>{
+      const formatted = formatLive(e.target.value, cfg);
+      e.target.value = formatted;
+      filterState[id] = parseFormatted(formatted);
       render();
     });
   });
@@ -339,7 +364,7 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
     activeCounties.clear();
     document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
     document.getElementById('searchBox').value=''; searchTerm='';
-    document.getElementById('sortSel').value='rank'; sortMode='rank';
+    document.getElementById('sortSel').value='address-asc'; sortMode='address-asc';
     rangeIds.forEach(id=>{ document.getElementById(id).value=''; filterState[id]=null; });
     render();
   });
@@ -387,7 +412,7 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
       });
     } else {
       const cmp = {
-        'rank': (a,b)=>a.rank-b.rank,
+        'address-asc': (a,b)=>a.address.localeCompare(b.address),
         'price-asc': (a,b)=>a.price-b.price,
         'price-desc': (a,b)=>b.price-a.price,
         'psf-asc': (a,b)=>a.psfBuilding-b.psfBuilding,
@@ -400,9 +425,20 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
   }
 
   const map = L.map('map', {zoomControl:true}).setView([34.4,-117.6], 7);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
-    attribution:'&copy; OpenStreetMap &copy; CARTO', maxZoom:19
+  const tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19
   }).addTo(map);
+  let tileLoadFailed = false;
+  tileLayer.on('tileerror', () => {
+    if (tileLoadFailed) return;
+    tileLoadFailed = true;
+    const mapDiv = document.getElementById('map');
+    const notice = document.createElement('div');
+    notice.style.cssText = 'position:absolute;top:8px;left:8px;z-index:1000;background:#fff;border:1px solid #D7DCE1;border-radius:6px;padding:6px 10px;font-size:12px;color:#5B6B7A;max-width:260px;';
+    notice.textContent = 'Map tiles failed to load (network/ad-blocker may be blocking openstreetmap.org) — pins below are still accurate, just without street map underneath.';
+    mapDiv.appendChild(notice);
+  });
   let markerLayer = L.layerGroup().addTo(map);
   const markerIndex = {};
 
@@ -410,13 +446,12 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
     markerLayer.clearLayers();
     list.forEach(d=>{
       if(d.lat==null) return;
-      const color = tierColor(d.rank);
       const icon = L.divIcon({
-        html:`<div class="marker-pin" style="width:8px;height:8px;background:${color}"></div>`,
+        html:`<div class="marker-pin" style="width:8px;height:8px;background:${getCss('--pin')}"></div>`,
         className:'', iconSize:[8,8], iconAnchor:[4,4]
       });
       const m = L.marker([d.lat,d.lon], {icon});
-      m.bindPopup(`<b>${d.address}</b><br>${d.city}, ${d.county} Co.<br>${fmtMoney(d.price)} · $${d.psfBuilding}/SF · Rank #${d.rank}`);
+      m.bindPopup(`<b>${d.address}</b><br>${d.city}, ${d.county} Co.<br>${fmtMoney(d.price)} · $${d.psfBuilding}/SF`);
       m.on('click', ()=>openDetail(d.id));
       markerIndex[d.id]=m;
       markerLayer.addLayer(m);
@@ -428,8 +463,7 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
     document.getElementById('visibleCount').textContent = list.length;
     const rows = list.map(d=>`
       <tr data-id="${d.id}">
-        <td>#${d.rank}</td>
-        <td><span class="tier-dot" style="background:${tierColor(d.rank)}"></span>${d.address}</td>
+        <td>${d.address}</td>
         <td>${d.city}</td>
         <td>${d.county}</td>
         <td class="num">${fmtSF(d.buildingSF)}</td>
@@ -437,7 +471,6 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
         <td class="num">${fmtMoney(d.price)}</td>
         <td class="num">$${d.psfBuilding}</td>
         <td class="num">${d.psfLand!=null?'$'+d.psfLand:'—'}</td>
-        <td class="num score-cell">${d.score}</td>
       </tr>`).join('');
     tbody.innerHTML = rows;
     tbody.querySelectorAll('tr').forEach(tr=>{
@@ -460,15 +493,13 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
     const d = DATA.find(x=>x.id===id);
     if(!d) return;
     if(panMap && d.lat!=null){ map.setView([d.lat,d.lon], 12, {animate:true}); markerIndex[id] && markerIndex[id].openPopup(); }
-    const tierLabel = tierOf(d.rank)===1?'Top 30':tierOf(d.rank)===2?'Top 100 — full writeup':'Full data set';
     const om = OMS[d.id];
+    const excerpts = d.excerptImages || [];
 
     panel.innerHTML = `
       <button class="detail-close" id="closeBtn">✕</button>
-      <div class="d-rank">RANK #${d.rank} · ${tierLabel}</div>
       <div class="d-addr">${d.address}</div>
       <div class="d-sub">${d.city}, ${d.county} County · ${d.zip} · ${d.submarket} (${d.market})</div>
-      <div class="d-score-badge">Opportunity Score ${d.score} / 100</div>
       <div class="stat-grid">
         ${stat('Building Size', fmtSF(d.buildingSF)+' SF')}
         ${stat('Land Size', d.landAC!=null? d.landAC+' ac':'—')}
@@ -484,8 +515,6 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
       ${d.propertyDesc ? `<div class="d-section"><h4>Property</h4><p>${d.propertyDesc}</p></div>` : ''}
       ${d.tenantDesc ? `<div class="d-section"><h4>Tenancy</h4><p>${d.tenantDesc}</p></div>` : ''}
       ${d.cityDesc ? `<div class="d-section"><h4>Location</h4><p>${d.cityDesc}</p></div>` : ''}
-      ${d.valueAddDesc ? `<div class="d-section"><h4>Why It Ranks Here</h4><p>${d.valueAddDesc}</p></div>` : ''}
-      ${!d.propertyDesc ? `<div class="d-section"><p class="empty-note">Outside the top 100 — no narrative writeup, but all financial and location data above is complete.</p></div>` : ''}
       <div class="d-section">
         <h4>Broker of Record</h4>
         <div class="contact-line">${d.salesCompany || 'Not listed'}${d.salesContact? ' · '+d.salesContact : ''}${d.salesPhone? ' · '+d.salesPhone : ''}</div>
@@ -494,8 +523,12 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
         <a class="btn primary" href="${d.gmaps}" target="_blank" rel="noopener">Open in Google Maps</a>
       </div>
       <div class="d-section" style="margin-top:18px;">
+        <h4>Listing Flyer</h4>
+        ${excerpts.length ? `<div class="excerpt-gallery">${excerpts.map(img=>`<img src="${img}" alt="Listing flyer page" onclick="window.open('${img}','_blank')">`).join('')}</div>` : `<p class="empty-note">No flyer excerpt available for this property.</p>`}
+      </div>
+      <div class="d-section" style="margin-top:18px;">
         <h4>Offering Memorandum</h4>
-        <div class="om-box">${om ? `<a class="btn brass" href="${om}" target="_blank" rel="noopener">📄 View OM</a>` : `<span class="empty-note">No OM attached. Add a PDF to /oms and a line to oms.json to attach one (see README).</span>`}</div>
+        <div class="om-box">${om ? `<a class="btn brass" href="${om}" target="_blank" rel="noopener">📄 View OM</a>` : `<span class="empty-note">No OM attached. Add the PDF to the repo root and a line to oms.json to attach one (see README).</span>`}</div>
       </div>
     `;
     document.getElementById('closeBtn').addEventListener('click', closeDetail);

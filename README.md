@@ -37,17 +37,32 @@ say so.
 ## Adding Offering Memorandums
 
 No live upload from the browser (that needs a file-storage backend, which
-plain static hosting doesn't have). For now:
+plain static hosting doesn't have), and no `/oms` folder either — everything
+in this repo sits flat in the root, same as the file list below. To attach one:
 
-1. Drop the PDF in `/oms`.
-2. Add one line to `oms.json` mapping that property's `id` (from `data.json`) to the file's path.
+1. Drop the PDF straight in the repo root (e.g. `57980-twentynine-palms-hwy.pdf`, right next to `index.html`).
+2. Add one line to `oms.json` mapping that property's `id` (from `data.json`) to that filename — no path prefix, just the filename.
 3. Commit, push — Vercel redeploys automatically and the property's detail panel picks it up.
 
 ## Files
 
 ```
-index.html   Map, filters, table, detail panel, and the password gate
-data.json    The 365-property dataset
-oms.json     Property id → OM PDF path
-oms/         OM PDFs live here
+index.html          Map, filters, table, detail panel, and the password gate
+data.json            The 365-property dataset
+oms.json              Property id → OM PDF filename
+excerpt-pNNN-*.jpg   Listing-flyer page(s) for each property (363 of 365 have one)
 ```
+
+Any OM PDFs you add later just sit alongside these, flat in the root — no
+subfolders anywhere in this repo, so GitHub's drag-and-drop uploader has
+nothing to flatten or get wrong.
+
+## Flyer excerpts
+
+Each property's detail panel shows the actual 1-2 flyer pages for that
+listing (pulled from the CoStar county PDFs and matched by address), in
+place of any ranking/scoring writeup. They're plain JPEGs, so they render
+identically everywhere with no PDF viewer needed — click one to open it
+full-size in a new tab. 2 of the 365 properties don't have a match (their
+address wasn't present in the source PDFs) and just show "No flyer excerpt
+available."

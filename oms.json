@@ -1,3 +1,3 @@
 {
-  "_comment": "Map a property id (from data.json, e.g. p001) to its OM PDF path. Example below (uncomment and edit): \"p001\": \"/oms/57980-twentynine-palms-hwy.pdf\""
+  "_comment": "Map a property id (from data.json, e.g. p001) to its OM PDF filename. No folders - the PDF sits in the repo root next to this file. Example below (uncomment and edit): \"p001\": \"57980-twentynine-palms-hwy.pdf\""
 }
