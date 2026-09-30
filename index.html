@@ -14,18 +14,21 @@
 :root{
   --ink:#1B2430; --ink-soft:#3E4A59; --paper:#EEF1F4; --panel:#FFFFFF;
   --line:#D7DCE1; --brass:#B98B34; --brass-deep:#8F6A24; --slate:#5B6B7A; --pin:#2B3A55; --liked:#3F7D58;
+  --desert:#C1603C; --desert-deep:#9B4A2C;
   color-scheme: light;
 }
 :root:not([data-theme="light"]) {
   @media (prefers-color-scheme: dark) {
     --ink:#EDEFF2; --ink-soft:#B7C0CC; --paper:#12161C; --panel:#1A1F27;
     --line:#2A313B; --brass:#D3A24E; --brass-deep:#E7BE72; --slate:#8A97A5; --pin:#7C93B8; --liked:#5FA378;
+    --desert:#E08862; --desert-deep:#EDA67F;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"]{
   --ink:#EDEFF2; --ink-soft:#B7C0CC; --paper:#12161C; --panel:#1A1F27;
   --line:#2A313B; --brass:#D3A24E; --brass-deep:#E7BE72; --slate:#8A97A5; --pin:#7C93B8; --liked:#5FA378;
+  --desert:#E08862; --desert-deep:#EDA67F;
   color-scheme: dark;
 }
 *{box-sizing:border-box;}
@@ -60,6 +63,23 @@ header.top{
   letter-spacing:.04em; font-size:10.5px; white-space:nowrap;
 }
 .criteria-ribbon .ribbon-sep{color:var(--line); font-weight:400;}
+.cluster-bar{
+  display:flex; gap:10px; padding:10px 20px; background:var(--panel); border-bottom:1px solid var(--line);
+}
+.cluster-btn{
+  flex:1; max-width:280px; padding:10px 16px; border:1.5px solid var(--line); border-radius:8px;
+  background:var(--paper); color:var(--ink-soft); font-size:14px; font-weight:600; cursor:pointer;
+  transition:border-color .15s, background .15s, color .15s;
+}
+.cluster-btn:hover{border-color:var(--brass-deep);}
+.cluster-btn.active[data-cluster="Southern California"]{
+  background:var(--brass-deep); border-color:var(--brass-deep); color:#fff;
+}
+.cluster-btn.active[data-cluster="Inland Desert West"]{
+  background:var(--desert-deep); border-color:var(--desert-deep); color:#fff;
+}
+body.cluster-idw .criteria-ribbon{border-bottom-color:var(--desert-deep);}
+body.cluster-idw .ribbon-label{color:var(--desert-deep);}
 .tenancy-tag{
   display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px;
   font-weight:600; letter-spacing:.02em; background:var(--pin); color:#fff; opacity:.85;
@@ -241,11 +261,16 @@ tbody tr:hover{background:var(--panel);}
 
 <div id="appRoot" class="hidden">
 
+<div class="cluster-bar" id="clusterBar">
+  <button type="button" class="cluster-btn" data-cluster="Southern California">Southern California</button>
+  <button type="button" class="cluster-btn" data-cluster="Inland Desert West">Inland Desert West</button>
+</div>
+
 <header class="top">
   <div class="top-row">
     <h1>Retail Acquisition Explorer</h1>
     <div style="display:flex; align-items:center; gap:14px;">
-      <span class="count"><span id="visibleCount">365</span> of <span id="totalCount">365</span> shopping centers</span>
+      <span class="count"><span id="visibleCount">365</span> of <span id="totalCount">365</span> properties</span>
       <button class="logout" id="logoutBtn">Log out</button>
     </div>
   </div>
@@ -254,7 +279,7 @@ tbody tr:hover{background:var(--panel);}
 <div class="criteria-ribbon">
   <span class="ribbon-label">Sourcing criteria</span>
   <span class="ribbon-sep">·</span>
-  <span>Southern California retail properties for sale as of 9/28/2026 — 5,000+ SF, priced at $10M or less and $500/PSF or less.</span>
+  <span id="ribbonText">Southern California and Inland Desert West retail properties for sale as of 9/28/2026 — 5,000+ SF, priced at $10M or less and $500/PSF or less.</span>
 </div>
 
 <div class="filters">
@@ -393,6 +418,7 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
 
   let activeCounties = new Set();
   let activeTenancy = new Set();
+  let activeCluster = null; // null = "everything"; else 'Southern California' | 'Inland Desert West'
   let sortMode = 'address-asc';
   let searchTerm = '';
   let selectedId = null;
@@ -434,26 +460,31 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
   function loadPresets(){ try{ return JSON.parse(localStorage.getItem(PRESETS_KEY) || '[]'); }catch(e){ return []; } }
   function savePresetsList(arr){ try{ localStorage.setItem(PRESETS_KEY, JSON.stringify(arr)); }catch(e){} }
   let presets = loadPresets();
-
-  const counties = [...new Set(DATA.map(d=>d.county))].sort();
-
   function fmtMoney(n){ return '$'+n.toLocaleString('en-US'); }
   function fmtSF(n){ return n.toLocaleString('en-US'); }
   function getCss(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim() || '#2B3A55'; }
   function escapeHtml(s){ return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
   const chipRow = document.getElementById('countyChips');
-  counties.forEach(c=>{
-    const chip = document.createElement('div');
-    chip.className='chip';
-    chip.textContent = c + ' (' + DATA.filter(d=>d.county===c).length + ')';
-    chip.addEventListener('click', ()=>{
-      if(activeCounties.has(c)) activeCounties.delete(c); else activeCounties.add(c);
-      chip.classList.toggle('active');
-      render();
+  function renderCountyChips(){
+    chipRow.innerHTML = '';
+    const scoped = activeCluster ? DATA.filter(d=>d.cluster===activeCluster) : DATA;
+    const counties = [...new Set(scoped.map(d=>d.county))].sort();
+    // drop any active county selections that no longer apply under this cluster scope
+    activeCounties.forEach(c=>{ if(!counties.includes(c)) activeCounties.delete(c); });
+    counties.forEach(c=>{
+      const chip = document.createElement('div');
+      chip.className = 'chip' + (activeCounties.has(c) ? ' active' : '');
+      chip.textContent = c + ' (' + scoped.filter(d=>d.county===c).length + ')';
+      chip.addEventListener('click', ()=>{
+        if(activeCounties.has(c)) activeCounties.delete(c); else activeCounties.add(c);
+        chip.classList.toggle('active');
+        render();
+      });
+      chipRow.appendChild(chip);
     });
-    chipRow.appendChild(chip);
-  });
+  }
+  renderCountyChips();
 
   const tenancyTypes = [...new Set(DATA.map(d=>d.tenancy))].sort();
   const tenancyChipRow = document.getElementById('tenancyChips');
@@ -467,6 +498,30 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
       render();
     });
     tenancyChipRow.appendChild(chip);
+  });
+
+  // ---- cluster toggle (Southern California / Inland Desert West) ----
+  const RIBBON_TEXT = {
+    'null': 'Southern California and Inland Desert West retail properties for sale as of 9/28/2026 — 5,000+ SF, priced at $10M or less and $500/PSF or less.',
+    'Southern California': 'Southern California retail properties for sale as of 9/28/2026 — 5,000+ SF, priced at $10M or less and $500/PSF or less.',
+    'Inland Desert West': 'Inland Desert West retail properties (Las Vegas metro area and Eastern Sierra) for sale as of 9/28/2026 — 5,000+ SF, priced at $10M or less and $500/PSF or less.',
+  };
+  function setCluster(cl){
+    activeCluster = (activeCluster === cl) ? null : cl;
+    document.querySelectorAll('.cluster-btn').forEach(b=>{
+      b.classList.toggle('active', b.dataset.cluster === activeCluster);
+    });
+    document.body.classList.toggle('cluster-idw', activeCluster === 'Inland Desert West');
+    document.getElementById('ribbonText').textContent = RIBBON_TEXT[String(activeCluster)];
+    document.getElementById('totalCount').textContent = activeCluster
+      ? DATA.filter(d=>d.cluster===activeCluster).length
+      : DATA.length;
+    renderCountyChips();
+    render();
+    map.fitBounds(boundsForCurrentView(), {padding:[24,24]});
+  }
+  document.querySelectorAll('.cluster-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> setCluster(btn.dataset.cluster));
   });
 
   // ---- live number formatting for the range filter inputs ----
@@ -535,6 +590,7 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
       activeCounties: [...activeCounties],
       activeTenancy: [...activeTenancy],
       sortMode, searchTerm,
+      cluster: activeCluster,
     };
   }
 
@@ -543,6 +599,16 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
   }
 
   function applyFilterSnapshot(snap){
+    activeCluster = snap.cluster || null;
+    document.querySelectorAll('.cluster-btn').forEach(b=>{
+      b.classList.toggle('active', b.dataset.cluster === activeCluster);
+    });
+    document.body.classList.toggle('cluster-idw', activeCluster === 'Inland Desert West');
+    document.getElementById('ribbonText').textContent = RIBBON_TEXT[String(activeCluster)];
+    document.getElementById('totalCount').textContent = activeCluster
+      ? DATA.filter(d=>d.cluster===activeCluster).length
+      : DATA.length;
+
     filterState = { sfMin:null, sfMax:null, priceMin:null, priceMax:null, landMin:null, landMax:null, psfMin:null, psfMax:null, ...(snap.filterState||{}) };
     activeCounties = new Set(snap.activeCounties || []);
     activeTenancy = new Set(snap.activeTenancy || []);
@@ -556,13 +622,12 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
       const el = document.getElementById(id);
       el.value = (v==null) ? '' : formatLive(String(v), rangeConfig[id]);
     });
-    document.querySelectorAll('#countyChips .chip').forEach(c=>{
-      c.classList.toggle('active', [...activeCounties].some(name=>chipLabelMatches(c,name)));
-    });
+    renderCountyChips(); // rebuilds scoped to the restored cluster, preserving matching selections
     document.querySelectorAll('#tenancyChips .chip').forEach(c=>{
       c.classList.toggle('active', [...activeTenancy].some(name=>chipLabelMatches(c,name)));
     });
     render();
+    map.fitBounds(boundsForCurrentView(), {padding:[24,24]});
   }
 
   function renderPresetsUI(){
@@ -671,6 +736,7 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
 
   function filteredSorted(){
     let list = DATA.filter(d=>{
+      if(activeCluster && d.cluster !== activeCluster) return false;
       if(favoritesOnly && !isFavorite(d.id)) return false;
       if(activeCounties.size && !activeCounties.has(d.county)) return false;
       if(activeTenancy.size && !activeTenancy.has(d.tenancy)) return false;
@@ -711,6 +777,14 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
 
   const dataPoints = DATA.filter(d=>d.lat!=null).map(d=>[d.lat,d.lon]);
   const initialBounds = L.latLngBounds(dataPoints);
+  const clusterBounds = {};
+  [...new Set(DATA.map(d=>d.cluster))].forEach(cl=>{
+    const pts = DATA.filter(d=>d.cluster===cl && d.lat!=null).map(d=>[d.lat,d.lon]);
+    if(pts.length) clusterBounds[cl] = L.latLngBounds(pts);
+  });
+  function boundsForCurrentView(){
+    return (activeCluster && clusterBounds[activeCluster]) ? clusterBounds[activeCluster] : initialBounds;
+  }
 
   const map = L.map('map', {zoomControl:true});
   map.fitBounds(initialBounds, {padding:[24,24]});
@@ -737,7 +811,7 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
       btn.title = 'Recenter map';
       btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>';
       L.DomEvent.disableClickPropagation(btn);
-      L.DomEvent.on(btn, 'click', ()=> map.fitBounds(initialBounds, {padding:[24,24]}));
+      L.DomEvent.on(btn, 'click', ()=> map.fitBounds(boundsForCurrentView(), {padding:[24,24]}));
       return btn;
     }
   });
@@ -750,7 +824,7 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
   // re-fit the view once the app becomes visible.
   function refreshMapSize(){
     map.invalidateSize();
-    map.fitBounds(initialBounds, {padding:[24,24]});
+    map.fitBounds(boundsForCurrentView(), {padding:[24,24]});
   }
   if(!appRoot.classList.contains('hidden')){
     refreshMapSize();
@@ -875,7 +949,7 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
       </div>
       <div class="d-section" style="margin-top:18px;">
         <h4>Listing Flyer</h4>
-        ${excerpts.length ? `<div class="excerpt-gallery">${excerpts.map(img=>`<img src="${img}" alt="Listing flyer page" onclick="window.open('${img}','_blank')">`).join('')}</div>` : `<p class="empty-note">No flyer excerpt available for this property.</p>`}
+        ${excerpts.length ? `<div class="excerpt-gallery">${excerpts.map(img=>`<img src="images/${img}" alt="Listing flyer page" onclick="window.open('images/${img}','_blank')">`).join('')}</div>` : `<p class="empty-note">No flyer excerpt available for this property.</p>`}
       </div>
       <div class="d-section" style="margin-top:18px;">
         <h4>Offering Memorandum</h4>
