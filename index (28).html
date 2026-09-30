@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Retail Acquisition Explorer — SoCal &amp; Central Coast</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%97%BA%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{
+  --ink:#1B2430; --ink-soft:#3E4A59; --paper:#EEF1F4; --panel:#FFFFFF;
+  --line:#D7DCE1; --brass:#B98B34; --brass-deep:#8F6A24; --slate:#5B6B7A; --pin:#2B3A55; --liked:#3F7D58;
+  --desert:#C1603C; --desert-deep:#9B4A2C;
+  color-scheme: light;
+}
+:root:not([data-theme="light"]) {
+  @media (prefers-color-scheme: dark) {
+    --ink:#EDEFF2; --ink-soft:#B7C0CC; --paper:#12161C; --panel:#1A1F27;
+    --line:#2A313B; --brass:#D3A24E; --brass-deep:#E7BE72; --slate:#8A97A5; --pin:#7C93B8; --liked:#5FA378;
+    --desert:#E08862; --desert-deep:#EDA67F;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#EDEFF2; --ink-soft:#B7C0CC; --paper:#12161C; --panel:#1A1F27;
+  --line:#2A313B; --brass:#D3A24E; --brass-deep:#E7BE72; --slate:#8A97A5; --pin:#7C93B8; --liked:#5FA378;
+  --desert:#E08862; --desert-deep:#EDA67F;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif; font-variant-numeric: tabular-nums lining-nums;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+h1,h2,h3,.serif{font-family:'Fraunces',serif;}
+a{color:inherit;}
+button{font-family:inherit;}
+
+header.top{
+  padding: 16px 20px; padding-top:calc(16px + env(safe-area-inset-top,0px));
+  border-bottom:1px solid var(--line); background:var(--panel);
+  position:sticky; top:0; z-index:40;
+}
+.top-row{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; justify-content:space-between;}
+.top-row h1{font-size:22px; font-weight:600; margin:0; letter-spacing:-0.01em;}
+.top-row .count{font-size:13px; color:var(--slate);}
+.logout{font-size:12.5px; color:var(--slate); text-decoration:underline; cursor:pointer; background:none; border:none;}
+
+/* --------- criteria ribbon --------- */
+.criteria-ribbon{
+  padding:7px 20px; background:var(--paper); border-bottom:1px solid var(--line);
+  font-size:12px; color:var(--ink-soft);
+  display:flex; flex-wrap:wrap; gap:5px 10px; align-items:center;
+}
+.criteria-ribbon .ribbon-label{
+  font-weight:700; color:var(--brass-deep); text-transform:uppercase;
+  letter-spacing:.04em; font-size:10.5px; white-space:nowrap;
+}
+.criteria-ribbon .ribbon-sep{color:var(--line); font-weight:400;}
+.cluster-bar{
+  display:flex; gap:10px; padding:10px 20px; background:var(--panel); border-bottom:1px solid var(--line);
+}
+.cluster-btn{
+  flex:1; max-width:280px; padding:10px 16px; border:1.5px solid var(--line); border-radius:8px;
+  background:var(--paper); color:var(--ink-soft); font-size:14px; font-weight:600; cursor:pointer;
+  transition:border-color .15s, background .15s, color .15s;
+}
+.cluster-btn:hover{border-color:var(--brass-deep);}
+.cluster-btn.active[data-cluster="Southern California"]{
+  background:var(--brass-deep); border-color:var(--brass-deep); color:#fff;
+}
+.cluster-btn.active[data-cluster="Inland Desert West"]{
+  background:var(--desert-deep); border-color:var(--desert-deep); color:#fff;
+}
+body.cluster-idw .criteria-ribbon{border-bottom-color:var(--desert-deep);}
+body.cluster-idw .ribbon-label{color:var(--desert-deep);}
+.tenancy-tag{
+  display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px;
+  font-weight:600; letter-spacing:.02em; background:var(--pin); color:#fff; opacity:.85;
+}
+.tenancy-tag.single{background:var(--brass-deep);}
+
+/* --------- filter bar --------- */
+.filters{
+  padding:14px 20px; background:var(--panel); border-bottom:1px solid var(--line);
+  display:flex; flex-wrap:wrap; gap:14px 22px; align-items:flex-end;
+}
+.f-group{display:flex; flex-direction:column; gap:4px;}
+.chip-group{display:flex; flex-direction:column; gap:4px; width:100%;}
+.f-label{font-size:11px; color:var(--slate); font-weight:600;}
+.f-range{display:flex; gap:6px; align-items:center;}
+.f-range input[type=number]{
+  width:92px; padding:6px 8px; border:1px solid var(--line); border-radius:6px;
+  background:var(--paper); color:var(--ink); font-size:13px;
+}
+.f-range span{color:var(--slate); font-size:12px;}
+.search-box{
+  padding:7px 12px; border:1px solid var(--line); border-radius:6px;
+  background:var(--paper); color:var(--ink); font-size:14px; min-width:200px;
+}
+select{
+  padding:7px 10px; border:1px solid var(--line); border-radius:6px;
+  background:var(--paper); color:var(--ink); font-size:13px;
+}
+.chip-row{display:flex; gap:6px; flex-wrap:wrap;}
+.chip{
+  padding:5px 11px; border:1px solid var(--line); border-radius:20px; font-size:12.5px;
+  cursor:pointer; background:var(--paper); color:var(--ink-soft); user-select:none;
+}
+.chip.active{background:var(--ink); color:var(--panel); border-color:var(--ink);}
+.reset-link{font-size:12.5px; color:var(--slate); text-decoration:underline; cursor:pointer; background:none; border:none; padding:6px 2px; align-self:flex-end;}
+.reset-link.active{color:#C4453A; font-weight:700; text-decoration:none;}
+.btn-outline{
+  text-decoration:none; border:1px solid var(--line); border-radius:6px;
+  padding:6px 10px; background:var(--paper);
+}
+.btn-outline:hover{border-color:var(--brass-deep); color:var(--brass-deep);}
+.btn-outline.active{background:var(--brass-deep); color:#fff; border-color:var(--brass-deep);}
+.preset-chip{
+  display:flex; align-items:center; gap:6px; padding:4px 6px 4px 11px; border:1px solid var(--line);
+  border-radius:20px; font-size:12.5px; background:var(--paper); color:var(--ink-soft);
+}
+.preset-chip .preset-name{cursor:pointer;}
+.preset-chip .preset-name:hover{color:var(--brass-deep); text-decoration:underline;}
+.preset-chip .preset-del{
+  cursor:pointer; background:none; border:none; color:var(--slate); font-size:14px; line-height:1;
+  padding:2px 4px; border-radius:50%;
+}
+.preset-chip .preset-del:hover{color:#C4453A;}
+
+/* --------- map hero --------- */
+#map{width:100%; height:58vh; min-height:380px; background:#dfe3e6; position:relative;}
+.marker-pin{border-radius:50%; border:1.5px solid #fff; box-shadow:0 1px 2px rgba(0,0,0,.4);}
+.marker-heart{
+  font-size:16px; line-height:12px; color:#C4453A; text-align:center;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.45));
+}
+.leaflet-popup-content{font-family:'Inter',sans-serif; font-size:13px;}
+.popup-detail-btn{
+  margin-top:6px; padding:5px 10px; border:1px solid var(--line); border-radius:5px;
+  background:var(--ink); color:var(--panel); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit;
+}
+.recenter-btn{
+  width:30px; height:30px; background:#fff; border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; color:#1B2430;
+}
+.recenter-btn:hover{background:#f4f4f4;}
+
+/* ---------- favorites & notes ---------- */
+.heart-btn{
+  background:none; border:none; cursor:pointer; font-size:17px; line-height:1; padding:2px 4px;
+  color:#C4453A;
+}
+.heart-btn.liked{color:#C4453A;}
+td.heart-cell{text-align:center; padding:6px 4px;}
+.notes-cell{max-width:220px; white-space:normal; overflow:hidden; text-overflow:ellipsis;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; font-size:12.5px; color:var(--ink-soft);}
+.notes-cell.empty{color:var(--slate); font-style:italic;}
+.d-heart-row{display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;}
+.d-heart-row .heart-btn{font-size:24px;}
+#notesBox{
+  width:100%; min-height:80px; border:1px solid var(--line); border-radius:6px; padding:10px;
+  background:var(--paper); color:var(--ink); font-family:inherit; font-size:13.5px; resize:vertical; box-sizing:border-box;
+}
+.notes-saved{font-size:11.5px; color:var(--slate); margin-top:4px; min-height:14px;}
+
+/* --------- table --------- */
+.table-wrap{padding:18px 20px 60px; overflow-x:auto;}
+table{width:100%; border-collapse:collapse; font-size:13.5px; min-width:920px;}
+thead th{
+  text-align:left; padding:9px 10px; border-bottom:2px solid var(--line); cursor:pointer;
+  white-space:nowrap; color:var(--ink-soft); font-weight:600; position:sticky; top:0; background:var(--paper);
+}
+thead th.sorted{color:var(--brass-deep);}
+tbody td{padding:8px 10px; border-bottom:1px solid var(--line); white-space:nowrap;}
+tbody tr{cursor:pointer;}
+tbody tr:hover{background:var(--panel);}
+.num{text-align:right;}
+
+/* --------- detail panel --------- */
+.detail-overlay{
+  position:fixed; inset:0; background:rgba(10,14,18,.4); z-index:2000;
+  display:none; align-items:stretch; justify-content:flex-end;
+}
+.detail-overlay.open{display:flex;}
+.detail-panel{
+  width:min(520px, 100%); background:var(--panel); height:100%; overflow-y:auto;
+  padding:22px 24px calc(28px + env(safe-area-inset-bottom,0px));
+  box-shadow:-8px 0 24px rgba(0,0,0,.15);
+}
+.detail-close{
+  float:right; background:none; border:1px solid var(--line); border-radius:6px;
+  width:30px; height:30px; font-size:16px; cursor:pointer; color:var(--ink);
+}
+.d-addr{font-size:21px; font-weight:600; margin:2px 0 2px; font-family:'Fraunces',serif;}
+.d-sub{font-size:13.5px; color:var(--ink-soft); margin-bottom:16px;}
+.stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px 16px; margin-bottom:18px;}
+.stat{border-top:1px solid var(--line); padding-top:6px;}
+.stat-label{font-size:11px; color:var(--slate);}
+.stat-value{font-size:15px; font-weight:600; margin-top:1px;}
+.d-section{margin-bottom:16px;}
+.d-section h4{font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--slate); margin:0 0 6px; font-weight:600;}
+.d-section p{font-size:14px; line-height:1.55; margin:0 0 8px;}
+.empty-note{font-size:13px; color:var(--slate); font-style:italic;}
+
+/* --------- county market information overlay --------- */
+.market-overlay{
+  position:fixed; inset:0; background:rgba(10,14,18,.5); z-index:2100;
+  display:none; align-items:flex-start; justify-content:center; overflow-y:auto; padding:32px 16px;
+}
+.market-overlay.open{display:flex;}
+.market-panel{
+  width:min(1120px, 100%); background:var(--panel); border-radius:10px;
+  box-shadow:0 20px 60px rgba(0,0,0,.35); padding:24px 28px 40px; margin-bottom:32px; position:relative;
+}
+.market-header{display:flex; align-items:flex-start; justify-content:space-between; gap:16px;}
+.market-title{font-family:'Fraunces',serif; font-size:25px; font-weight:600; margin:0;}
+.market-sub{font-size:13px; color:var(--slate); margin-top:4px;}
+.market-tabs{display:flex; gap:8px; flex-wrap:wrap; margin:16px 0 4px;}
+.market-tab{padding:6px 14px; border:1px solid var(--line); border-radius:20px; font-size:13px; cursor:pointer; background:var(--paper); color:var(--ink-soft); font-weight:600;}
+.market-tab.active{background:var(--brass-deep); color:#fff; border-color:var(--brass-deep);}
+body.cluster-idw .market-tab.active{background:var(--desert-deep); border-color:var(--desert-deep);}
+.market-category-tabs{display:flex; gap:6px; flex-wrap:wrap; margin:14px 0 20px; padding-bottom:16px; border-bottom:1px solid var(--line);}
+.market-category-tab{font-size:12.5px; padding:6px 12px; border:1px solid var(--line); border-radius:6px; background:var(--paper); color:var(--ink-soft); cursor:pointer; font-weight:600;}
+.market-category-tab.active{background:var(--ink); color:var(--panel); border-color:var(--ink);}
+.market-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(290px,1fr)); gap:16px;}
+.market-card{border:1px solid var(--line); border-radius:8px; padding:14px 16px; background:var(--paper);}
+.market-card h4{font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--brass-deep); margin:0 0 10px; font-weight:700;}
+body.cluster-idw .market-card h4{color:var(--desert-deep);}
+.market-card table{width:100%; border-collapse:collapse; font-size:13px;}
+.market-card td{padding:3px 0; border-bottom:1px dotted var(--line); vertical-align:top;}
+.market-card tr:last-child td{border-bottom:none;}
+.market-card td.mv-label{color:var(--ink-soft);}
+.market-card td.mv-value{text-align:right; font-weight:600; white-space:nowrap; padding-left:8px;}
+.market-close{
+  position:absolute; top:20px; right:24px; background:none; border:1px solid var(--line); border-radius:6px;
+  width:30px; height:30px; font-size:16px; cursor:pointer; color:var(--ink);
+}
+.btn-outline:disabled{opacity:.4; cursor:not-allowed;}
+.btn-outline:disabled:hover{border-color:var(--line); color:var(--ink-soft);}
+.btn-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;}
+.btn{
+  display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:6px;
+  font-size:13.5px; font-weight:600; text-decoration:none; cursor:pointer; border:1px solid var(--line);
+  background:var(--paper); color:var(--ink);
+}
+.btn.primary{background:var(--ink); color:var(--panel); border-color:var(--ink);}
+.btn.brass{background:var(--brass); color:#241a06; border-color:var(--brass);}
+.om-box{border:1px dashed var(--line); border-radius:8px; padding:12px; font-size:13.5px;}
+.excerpt-gallery{display:flex; flex-direction:column; gap:10px;}
+.excerpt-gallery img{width:100%; border:1px solid var(--line); border-radius:6px; display:block; cursor:zoom-in;}
+.contact-line{font-size:13px; color:var(--ink-soft); line-height:1.6;}
+::-webkit-scrollbar{width:9px;}
+::-webkit-scrollbar-thumb{background:var(--line); border-radius:6px;}
+
+/* ---------- password gate ---------- */
+#gateOverlay{
+  position:fixed; inset:0; z-index:500; background:var(--paper);
+  display:flex; align-items:center; justify-content:center;
+  padding: max(20px, env(safe-area-inset-top,0px)) 20px max(20px, env(safe-area-inset-bottom,0px));
+}
+#gateOverlay.hidden{display:none !important;}
+.gate-card{ width:100%; max-width:380px; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:32px 28px; }
+.gate-card h1{ font-family:'Fraunces',serif; font-size:22px; font-weight:600; margin:0 0 4px; }
+.gate-card p.sub{ font-size:13.5px; color:var(--ink-soft); margin:0 0 22px; }
+.gate-card input[type=password]{
+  width:100%; padding:11px 13px; border:1px solid var(--line); border-radius:7px;
+  background:var(--paper); color:var(--ink); font-size:15px; margin-bottom:12px; box-sizing:border-box;
+}
+.gate-card button{
+  width:100%; padding:11px; border:none; border-radius:7px; background:var(--ink); color:var(--panel);
+  font-size:14.5px; font-weight:600; cursor:pointer; font-family:inherit;
+}
+.gate-err{ color:#A8432F; font-size:13px; margin-top:10px; min-height:16px; }
+#appRoot.hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<div id="gateOverlay">
+  <div class="gate-card">
+    <h1>Retail Acquisition Explorer</h1>
+    <p class="sub">Enter the password to view the property list.</p>
+    <form id="gateForm">
+      <input type="password" id="gatePw" autofocus autocomplete="current-password" placeholder="Password">
+      <button type="submit">Sign in</button>
+      <div class="gate-err" id="gateErr"></div>
+    </form>
+  </div>
+</div>
+
+<div id="appRoot" class="hidden">
+
+<header class="top">
+  <div class="top-row">
+    <h1>Retail Acquisition Explorer</h1>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <span class="count"><span id="visibleCount">365</span> of <span id="totalCount">365</span> properties</span>
+      <button class="logout" id="logoutBtn">Log out</button>
+    </div>
+  </div>
+</header>
+
+<div class="criteria-ribbon">
+  <span class="ribbon-label">Sourcing criteria</span>
+  <span class="ribbon-sep">·</span>
+  <span id="ribbonText">Southern California and Inland Desert West retail properties for sale as of 9/28/2026 — 5,000+ SF, priced at $10M or less and $500/PSF or less.</span>
+</div>
+
+<div class="cluster-bar" id="clusterBar">
+  <button type="button" class="cluster-btn" data-cluster="Southern California">Southern California</button>
+  <button type="button" class="cluster-btn" data-cluster="Inland Desert West">Inland Desert West</button>
+</div>
+
+<div class="filters">
+  <input class="search-box" id="searchBox" type="text" placeholder="Search address or city…">
+
+  <div class="f-group">
+    <span class="f-label">Building SF</span>
+    <div class="f-range"><input type="text" inputmode="numeric" id="sfMin" placeholder="Min"><span>–</span><input type="text" inputmode="numeric" id="sfMax" placeholder="Max"></div>
+  </div>
+  <div class="f-group">
+    <span class="f-label">Price</span>
+    <div class="f-range"><input type="text" inputmode="numeric" id="priceMin" placeholder="Min $"><span>–</span><input type="text" inputmode="numeric" id="priceMax" placeholder="Max $"></div>
+  </div>
+  <div class="f-group">
+    <span class="f-label">Land Size (ac)</span>
+    <div class="f-range"><input type="text" inputmode="decimal" id="landMin" placeholder="Min"><span>–</span><input type="text" inputmode="decimal" id="landMax" placeholder="Max"></div>
+  </div>
+  <div class="f-group">
+    <span class="f-label">$/PSF Building</span>
+    <div class="f-range"><input type="text" inputmode="decimal" id="psfMin" placeholder="Min"><span>–</span><input type="text" inputmode="decimal" id="psfMax" placeholder="Max"></div>
+  </div>
+
+  <div class="f-group">
+    <span class="f-label">Sort</span>
+    <select id="sortSel">
+      <option value="address-asc">Address (A → Z)</option>
+      <option value="price-asc">Price (low → high)</option>
+      <option value="price-desc">Price (high → low)</option>
+      <option value="psf-asc">$/PSF Building (low → high)</option>
+      <option value="size-desc">Building Size (large → small)</option>
+      <option value="drive-asc">Est. drive from Glendale</option>
+    </select>
+  </div>
+
+  <div class="f-group">
+    <span class="f-label">Applies to filters above</span>
+    <button class="reset-link btn-outline" id="resetBtn">Reset filters</button>
+  </div>
+
+  <div class="f-group">
+    <span class="f-label">Saved Views</span>
+    <div class="f-range" style="flex-wrap:wrap;">
+      <button type="button" class="reset-link btn-outline" id="savePresetBtn">+ Save current view</button>
+      <button type="button" class="reset-link btn-outline" id="viewPresetsBtn">View saved views</button>
+    </div>
+  </div>
+
+  <button class="reset-link btn-outline" id="favToggle">♡ Favorites only</button>
+  <button class="reset-link btn-outline" id="exportFavBtn">⬇ Export favorites to Excel</button>
+
+  <div class="chip-row" id="presetsList" style="width:100%; display:none;"></div>
+
+  <div class="chip-group">
+    <span class="f-label">Tenancy</span>
+    <div class="chip-row" id="tenancyChips"></div>
+  </div>
+  <div class="chip-group">
+    <span class="f-label">County</span>
+    <div class="chip-row" id="countyChips"></div>
+  </div>
+</div>
+
+<div id="map"></div>
+
+<div class="table-wrap">
+  <table id="propTable">
+    <thead>
+      <tr>
+        <th></th>
+        <th data-key="address">Address</th>
+        <th data-key="city">City</th>
+        <th data-key="county">County</th>
+        <th data-key="tenancy">Tenancy</th>
+        <th data-key="buildingSF" class="num">Building SF</th>
+        <th data-key="landAC" class="num">Land (ac)</th>
+        <th data-key="price" class="num">Price</th>
+        <th data-key="psfBuilding" class="num">$/PSF Bldg</th>
+        <th data-key="psfLand" class="num">$/PSF Land</th>
+        <th>User Notes</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
+
+<div class="detail-overlay" id="detailOverlay">
+  <div class="detail-panel" id="detailPanel"></div>
+</div>
+
+<div class="market-overlay" id="marketOverlay">
+  <div class="market-panel" id="marketPanel"></div>
+</div>
+
+</div><!-- #appRoot -->
+
+<script>
+// ---------------- password gate (client-side, cosmetic only) ----------------
+// Change the password by editing the string below. Not real security: this data
+// is fully present in the page's HTML either way. Keeps casual visitors and
+// search engines out; not a substitute for real auth if this ever holds
+// something more sensitive than a property list.
+const SITE_PASSWORD = "DAN";
+const GATE_KEY = "rae_gate_ok";
+
+const gateOverlay = document.getElementById('gateOverlay');
+const appRoot = document.getElementById('appRoot');
+
+function unlock(){
+  gateOverlay.classList.add('hidden');
+  appRoot.classList.remove('hidden');
+  try{ sessionStorage.setItem(GATE_KEY, '1'); }catch(e){}
+  window.dispatchEvent(new Event('rae:unlocked'));
+}
+
+try{
+  if(sessionStorage.getItem(GATE_KEY) === '1'){ unlock(); }
+}catch(e){}
+
+document.getElementById('gateForm').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const pw = document.getElementById('gatePw').value;
+  if(pw === SITE_PASSWORD){
+    unlock();
+  } else {
+    document.getElementById('gateErr').textContent = 'Incorrect password.';
+  }
+});
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+async function loadJSON(path){ const r = await fetch(path); return r.json(); }
+
+(async function init(){
+  const DATA = await loadJSON('/data.json');
+  document.getElementById('totalCount').textContent = DATA.length;
+  let OMS = {};
+  try { OMS = await loadJSON('/oms.json'); } catch(e) { OMS = {}; }
+  let DEMOGRAPHICS = {};
+  try { DEMOGRAPHICS = await loadJSON('/demographics.json'); } catch(e) { DEMOGRAPHICS = {}; }
+
+  let activeCounties = new Set();
+  let activeTenancy = new Set();
+  let activeCluster = null; // null = "everything"; else 'Southern California' | 'Inland Desert West'
+  let sortMode = 'address-asc';
+  let searchTerm = '';
+  let selectedId = null;
+  let filterState = { sfMin:null, sfMax:null, priceMin:null, priceMax:null, landMin:null, landMax:null, psfMin:null, psfMax:null };
+  let sortDir = {};
+  let favoritesOnly = false;
+
+  // ---------------- favorites & notes (stored locally in this browser only) ----------------
+  const FAV_KEY = 'rae_favorites';
+  const NOTES_KEY = 'rae_notes';
+  function loadFavorites(){
+    try{ return new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]')); }catch(e){ return new Set(); }
+  }
+  function saveFavorites(set){
+    try{ localStorage.setItem(FAV_KEY, JSON.stringify([...set])); }catch(e){}
+  }
+  function loadNotes(){
+    try{ return JSON.parse(localStorage.getItem(NOTES_KEY) || '{}'); }catch(e){ return {}; }
+  }
+  function saveNotes(obj){
+    try{ localStorage.setItem(NOTES_KEY, JSON.stringify(obj)); }catch(e){}
+  }
+  let favorites = loadFavorites();
+  let notesStore = loadNotes();
+  function isFavorite(id){ return favorites.has(id); }
+  function toggleFavorite(id){
+    if(favorites.has(id)) favorites.delete(id); else favorites.add(id);
+    saveFavorites(favorites);
+  }
+  function getNote(id){ return notesStore[id] || ''; }
+  function setNote(id, text){
+    if(text.trim() === ''){ delete notesStore[id]; } else { notesStore[id] = text; }
+    saveNotes(notesStore);
+  }
+
+  // ---------------- saved filter-view presets (stored locally, max 10) ----------------
+  const PRESETS_KEY = 'rae_presets';
+  const MAX_PRESETS = 10;
+  function loadPresets(){ try{ return JSON.parse(localStorage.getItem(PRESETS_KEY) || '[]'); }catch(e){ return []; } }
+  function savePresetsList(arr){ try{ localStorage.setItem(PRESETS_KEY, JSON.stringify(arr)); }catch(e){} }
+  let presets = loadPresets();
+  function fmtMoney(n){ return '$'+n.toLocaleString('en-US'); }
+  function fmtSF(n){ return n.toLocaleString('en-US'); }
+  function fmtAC(n){ return n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+  function fmtPSF(n){ return '$'+n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+  function getCss(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim() || '#2B3A55'; }
+  function escapeHtml(s){ return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  const chipRow = document.getElementById('countyChips');
+  function renderCountyChips(){
+    chipRow.innerHTML = '';
+    const scoped = activeCluster ? DATA.filter(d=>d.cluster===activeCluster) : DATA;
+    const counties = [...new Set(scoped.map(d=>d.county))].sort();
+    // drop any active county selections that no longer apply under this cluster scope
+    activeCounties.forEach(c=>{ if(!counties.includes(c)) activeCounties.delete(c); });
+    counties.forEach(c=>{
+      const chip = document.createElement('div');
+      chip.className = 'chip' + (activeCounties.has(c) ? ' active' : '');
+      chip.textContent = c + ' (' + scoped.filter(d=>d.county===c).length + ')';
+      chip.addEventListener('click', ()=>{
+        if(activeCounties.has(c)) activeCounties.delete(c); else activeCounties.add(c);
+        chip.classList.toggle('active');
+        render();
+        map.fitBounds(boundsForCurrentView(), {padding:[24,24]});
+        updateMarketInfoBtn();
+      });
+      chipRow.appendChild(chip);
+    });
+    const marketBtn = document.createElement('button');
+    marketBtn.type = 'button';
+    marketBtn.className = 'reset-link btn-outline';
+    marketBtn.id = 'marketInfoBtn';
+    marketBtn.textContent = '📊 Market Information';
+    marketBtn.style.marginLeft = '4px';
+    marketBtn.disabled = activeCounties.size === 0;
+    marketBtn.addEventListener('click', openMarketInfo);
+    chipRow.appendChild(marketBtn);
+  }
+  function updateMarketInfoBtn(){
+    const btn = document.getElementById('marketInfoBtn');
+    if(btn) btn.disabled = activeCounties.size === 0;
+  }
+  renderCountyChips();
+
+  const tenancyTypes = [...new Set(DATA.map(d=>d.tenancy))].sort();
+  const tenancyChipRow = document.getElementById('tenancyChips');
+  tenancyTypes.forEach(t=>{
+    const chip = document.createElement('div');
+    chip.className='chip';
+    chip.textContent = t + ' (' + DATA.filter(d=>d.tenancy===t).length + ')';
+    chip.addEventListener('click', ()=>{
+      if(activeTenancy.has(t)) activeTenancy.delete(t); else activeTenancy.add(t);
+      chip.classList.toggle('active');
+      render();
+    });
+    tenancyChipRow.appendChild(chip);
+  });
+
+  // ---- cluster toggle (Southern California / Inland Desert West) ----
+  const RIBBON_TEXT = {
+    'null': 'Southern California and Inland Desert West retail properties for sale as of 9/28/2026 — 5,000+ SF, priced at $10M or less and $500/PSF or less.',
+    'Southern California': 'Southern California retail properties for sale as of 9/28/2026 — 5,000+ SF, priced at $10M or less and $500/PSF or less.',
+    'Inland Desert West': 'Inland Desert West retail properties (Las Vegas metro area and Eastern Sierra) for sale as of 9/28/2026 — 5,000+ SF, priced at $10M or less and $500/PSF or less.',
+  };
+  function setCluster(cl){
+    activeCluster = (activeCluster === cl) ? null : cl;
+    document.querySelectorAll('.cluster-btn').forEach(b=>{
+      b.classList.toggle('active', b.dataset.cluster === activeCluster);
+    });
+    document.body.classList.toggle('cluster-idw', activeCluster === 'Inland Desert West');
+    document.getElementById('ribbonText').textContent = RIBBON_TEXT[String(activeCluster)];
+    document.getElementById('totalCount').textContent = activeCluster
+      ? DATA.filter(d=>d.cluster===activeCluster).length
+      : DATA.length;
+    renderCountyChips();
+    render();
+    map.fitBounds(boundsForCurrentView(), {padding:[24,24]});
+  }
+  document.querySelectorAll('.cluster-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> setCluster(btn.dataset.cluster));
+  });
+
+  // ---- live number formatting for the range filter inputs ----
+  // sf/price: whole numbers, comma-grouped ("1,000", "$1,000,000")
+  // land/psf: decimals allowed, comma-grouped integer part ("1,000.5", "$2.50")
+  const rangeConfig = {
+    sfMin:{prefix:'',decimals:false}, sfMax:{prefix:'',decimals:false},
+    priceMin:{prefix:'$',decimals:false}, priceMax:{prefix:'$',decimals:false},
+    landMin:{prefix:'',decimals:true}, landMax:{prefix:'',decimals:true},
+    psfMin:{prefix:'$',decimals:true}, psfMax:{prefix:'$',decimals:true},
+  };
+  function parseFormatted(str){
+    if(!str) return null;
+    const cleaned = str.replace(/[^0-9.]/g, '');
+    if(cleaned === '' || cleaned === '.') return null;
+    const n = parseFloat(cleaned);
+    return isNaN(n) ? null : n;
+  }
+  function formatLive(str, cfg){
+    let cleaned = str.replace(/[^0-9.]/g, '');
+    if(!cfg.decimals) cleaned = cleaned.replace(/\./g, '');
+    // keep only the first decimal point
+    const firstDot = cleaned.indexOf('.');
+    if(firstDot !== -1){
+      cleaned = cleaned.slice(0, firstDot+1) + cleaned.slice(firstDot+1).replace(/\./g, '');
+    }
+    if(cleaned === '') return '';
+    let [intPart, decPart] = cleaned.split('.');
+    intPart = intPart.replace(/^0+(?=\d)/, '');
+    const withCommas = intPart === '' ? '' : parseInt(intPart, 10).toLocaleString('en-US');
+    let out = cfg.prefix + (withCommas || (intPart === '' ? '' : '0'));
+    if(decPart !== undefined) out += '.' + decPart;
+    return out;
+  }
+
+  const rangeIds = ['sfMin','sfMax','priceMin','priceMax','landMin','landMax','psfMin','psfMax'];
+  rangeIds.forEach(id=>{
+    const el = document.getElementById(id);
+    const cfg = rangeConfig[id];
+    el.addEventListener('input', (e)=>{
+      const formatted = formatLive(e.target.value, cfg);
+      e.target.value = formatted;
+      filterState[id] = parseFormatted(formatted);
+      render();
+    });
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', ()=>{
+    activeCounties.clear();
+    activeTenancy.clear();
+    document.querySelectorAll('#tenancyChips .chip').forEach(c=>c.classList.remove('active'));
+    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+    document.getElementById('searchBox').value=''; searchTerm='';
+    document.getElementById('sortSel').value='address-asc'; sortMode='address-asc';
+    rangeIds.forEach(id=>{ document.getElementById(id).value=''; filterState[id]=null; });
+    favoritesOnly = false;
+    document.getElementById('favToggle').classList.remove('active');
+    document.getElementById('favToggle').textContent = '♡ Favorites only';
+    render();
+  });
+
+  // ---- preset snapshot / apply / render ----
+  function currentFilterSnapshot(){
+    return {
+      filterState: {...filterState},
+      activeCounties: [...activeCounties],
+      activeTenancy: [...activeTenancy],
+      sortMode, searchTerm,
+      cluster: activeCluster,
+    };
+  }
+
+  function chipLabelMatches(chip, name){
+    return chip.textContent.replace(/\s*\(\d+\)$/, '') === name;
+  }
+
+  function applyFilterSnapshot(snap){
+    activeCluster = snap.cluster || null;
+    document.querySelectorAll('.cluster-btn').forEach(b=>{
+      b.classList.toggle('active', b.dataset.cluster === activeCluster);
+    });
+    document.body.classList.toggle('cluster-idw', activeCluster === 'Inland Desert West');
+    document.getElementById('ribbonText').textContent = RIBBON_TEXT[String(activeCluster)];
+    document.getElementById('totalCount').textContent = activeCluster
+      ? DATA.filter(d=>d.cluster===activeCluster).length
+      : DATA.length;
+
+    filterState = { sfMin:null, sfMax:null, priceMin:null, priceMax:null, landMin:null, landMax:null, psfMin:null, psfMax:null, ...(snap.filterState||{}) };
+    activeCounties = new Set(snap.activeCounties || []);
+    activeTenancy = new Set(snap.activeTenancy || []);
+    sortMode = snap.sortMode || 'address-asc';
+    searchTerm = snap.searchTerm || '';
+
+    document.getElementById('searchBox').value = searchTerm;
+    if(!sortMode.startsWith('col:')) document.getElementById('sortSel').value = sortMode;
+    rangeIds.forEach(id=>{
+      const v = filterState[id];
+      const el = document.getElementById(id);
+      el.value = (v==null) ? '' : formatLive(String(v), rangeConfig[id]);
+    });
+    renderCountyChips(); // rebuilds scoped to the restored cluster, preserving matching selections
+    document.querySelectorAll('#tenancyChips .chip').forEach(c=>{
+      c.classList.toggle('active', [...activeTenancy].some(name=>chipLabelMatches(c,name)));
+    });
+    render();
+    map.fitBounds(boundsForCurrentView(), {padding:[24,24]});
+  }
+
+  function renderPresetsUI(){
+    const wrap = document.getElementById('presetsList');
+    wrap.innerHTML = '';
+    if(!presets.length){
+      const empty = document.createElement('span');
+      empty.style.cssText = 'font-size:12.5px; color:var(--slate);';
+      empty.textContent = 'No saved views yet.';
+      wrap.appendChild(empty);
+    }
+    presets.forEach((p, idx)=>{
+      const chip = document.createElement('div');
+      chip.className = 'preset-chip';
+      chip.innerHTML = `<span class="preset-name" title="Load this view">${escapeHtml(p.name)}</span><button type="button" class="preset-del" title="Delete this view">×</button>`;
+      chip.querySelector('.preset-name').addEventListener('click', ()=> applyFilterSnapshot(p.snapshot));
+      chip.querySelector('.preset-del').addEventListener('click', (e)=>{
+        e.stopPropagation();
+        if(!confirm(`Delete the saved view "${p.name}"?`)) return;
+        presets.splice(idx, 1);
+        savePresetsList(presets);
+        renderPresetsUI();
+      });
+      wrap.appendChild(chip);
+    });
+  }
+  renderPresetsUI();
+
+  document.getElementById('viewPresetsBtn').addEventListener('click', (e)=>{
+    const wrap = document.getElementById('presetsList');
+    const showing = wrap.style.display !== 'none';
+    wrap.style.display = showing ? 'none' : 'flex';
+    e.target.classList.toggle('active', !showing);
+  });
+
+  document.getElementById('savePresetBtn').addEventListener('click', ()=>{
+    if(presets.length >= MAX_PRESETS){
+      alert(`You can save up to ${MAX_PRESETS} views. Delete one before saving a new one.`);
+      return;
+    }
+    const name = prompt('Name this filter view (e.g. "Under $2M, Inland Empire"):', '');
+    if(!name || !name.trim()) return;
+    presets.push({ name: name.trim().slice(0, 60), snapshot: currentFilterSnapshot() });
+    savePresetsList(presets);
+    renderPresetsUI();
+    document.getElementById('presetsList').style.display = 'flex';
+    document.getElementById('viewPresetsBtn').classList.add('active');
+  });
+  document.getElementById('favToggle').addEventListener('click', (e)=>{
+    favoritesOnly = !favoritesOnly;
+    e.target.classList.toggle('active', favoritesOnly);
+    e.target.textContent = favoritesOnly ? '♥ Favorites only' : '♡ Favorites only';
+    render();
+  });
+  document.getElementById('exportFavBtn').addEventListener('click', ()=>{
+    const favList = DATA.filter(d=>isFavorite(d.id));
+    if(!favList.length){
+      alert('No favorited properties yet — heart a few properties first, then export.');
+      return;
+    }
+    const rows = favList.map(d=>({
+      'Property ID': d.id,
+      'Tenancy': d.tenancy,
+      'Address': d.address,
+      'City': d.city,
+      'County': d.county,
+      'Submarket': d.submarket,
+      'Market': d.market,
+      'Building SF': d.buildingSF,
+      'Land (ac)': d.landAC,
+      'Price': d.price,
+      '$/PSF Building': d.psfBuilding,
+      '$/PSF Land': d.psfLand,
+      '% Leased': d.leased,
+      'Building Class': d.bldgClass,
+      'Year Built': d.yearBuilt,
+      'Drive from Glendale (mi)': d.driveMi,
+      'Google Maps Link': d.gmaps,
+      'User Notes': getNote(d.id),
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = Object.keys(rows[0]).map(k => ({ wch: Math.max(14, k.length + 2) }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Favorites');
+    const stamp = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `retail-explorer-favorites-${stamp}.xlsx`);
+  });
+  document.getElementById('searchBox').addEventListener('input', (e)=>{ searchTerm=e.target.value.trim().toLowerCase(); render(); });
+  document.getElementById('sortSel').addEventListener('change', (e)=>{ sortMode=e.target.value; render(); });
+  document.getElementById('logoutBtn').addEventListener('click', ()=>{
+    try{ sessionStorage.removeItem('rae_gate_ok'); }catch(e){}
+    location.reload();
+  });
+
+  document.querySelectorAll('thead th').forEach(th=>{
+    if(!th.dataset.key) return;
+    th.addEventListener('click', ()=>{
+      const key = th.dataset.key;
+      sortDir[key] = (sortDir[key]||1) * -1;
+      sortMode = 'col:'+key;
+      document.querySelectorAll('thead th').forEach(t=>t.classList.remove('sorted'));
+      th.classList.add('sorted');
+      render();
+    });
+  });
+
+  function filteredSorted(){
+    let list = DATA.filter(d=>{
+      if(activeCluster && d.cluster !== activeCluster) return false;
+      if(favoritesOnly && !isFavorite(d.id)) return false;
+      if(activeCounties.size && !activeCounties.has(d.county)) return false;
+      if(activeTenancy.size && !activeTenancy.has(d.tenancy)) return false;
+      if(searchTerm && !(d.address.toLowerCase().includes(searchTerm) || d.city.toLowerCase().includes(searchTerm))) return false;
+      if(filterState.sfMin!=null && d.buildingSF < filterState.sfMin) return false;
+      if(filterState.sfMax!=null && d.buildingSF > filterState.sfMax) return false;
+      if(filterState.priceMin!=null && d.price < filterState.priceMin) return false;
+      if(filterState.priceMax!=null && d.price > filterState.priceMax) return false;
+      if(filterState.landMin!=null && (d.landAC==null || d.landAC < filterState.landMin)) return false;
+      if(filterState.landMax!=null && (d.landAC==null || d.landAC > filterState.landMax)) return false;
+      if(filterState.psfMin!=null && d.psfBuilding < filterState.psfMin) return false;
+      if(filterState.psfMax!=null && d.psfBuilding > filterState.psfMax) return false;
+      return true;
+    });
+    if(sortMode.startsWith('col:')){
+      const key = sortMode.slice(4);
+      const dir = sortDir[key]||1;
+      list.sort((a,b)=>{
+        let av=a[key], bv=b[key];
+        if(av==null) av = typeof bv==='number' ? -Infinity : '';
+        if(bv==null) bv = typeof av==='number' ? -Infinity : '';
+        if(typeof av === 'string') return dir*av.localeCompare(bv);
+        return dir*(av-bv);
+      });
+    } else {
+      const cmp = {
+        'address-asc': (a,b)=>a.address.localeCompare(b.address),
+        'price-asc': (a,b)=>a.price-b.price,
+        'price-desc': (a,b)=>b.price-a.price,
+        'psf-asc': (a,b)=>a.psfBuilding-b.psfBuilding,
+        'size-desc': (a,b)=>b.buildingSF-a.buildingSF,
+        'drive-asc': (a,b)=>(a.driveMi||9999)-(b.driveMi||9999),
+      }[sortMode];
+      list.sort(cmp);
+    }
+    return list;
+  }
+
+  const dataPoints = DATA.filter(d=>d.lat!=null).map(d=>[d.lat,d.lon]);
+  const initialBounds = L.latLngBounds(dataPoints);
+  const clusterBounds = {};
+  [...new Set(DATA.map(d=>d.cluster))].forEach(cl=>{
+    const pts = DATA.filter(d=>d.cluster===cl && d.lat!=null).map(d=>[d.lat,d.lon]);
+    if(pts.length) clusterBounds[cl] = L.latLngBounds(pts);
+  });
+  function boundsForCurrentView(){
+    if(activeCounties.size){
+      const scoped = activeCluster ? DATA.filter(d=>d.cluster===activeCluster) : DATA;
+      const pts = scoped.filter(d=>activeCounties.has(d.county) && d.lat!=null).map(d=>[d.lat,d.lon]);
+      if(pts.length) return L.latLngBounds(pts);
+    }
+    return (activeCluster && clusterBounds[activeCluster]) ? clusterBounds[activeCluster] : initialBounds;
+  }
+
+  const map = L.map('map', {zoomControl:true});
+  map.fitBounds(initialBounds, {padding:[24,24]});
+  const tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19
+  }).addTo(map);
+  let tileLoadFailed = false;
+  tileLayer.on('tileerror', () => {
+    if (tileLoadFailed) return;
+    tileLoadFailed = true;
+    const mapDiv = document.getElementById('map');
+    const notice = document.createElement('div');
+    notice.style.cssText = 'position:absolute;top:8px;left:8px;z-index:1000;background:#fff;border:1px solid #D7DCE1;border-radius:6px;padding:6px 10px;font-size:12px;color:#5B6B7A;max-width:260px;';
+    notice.textContent = 'Map tiles failed to load (network/ad-blocker may be blocking openstreetmap.org) — pins below are still accurate, just without street map underneath.';
+    mapDiv.appendChild(notice);
+  });
+
+  const RecenterControl = L.Control.extend({
+    options: { position: 'topleft' },
+    onAdd: function(){
+      const btn = L.DomUtil.create('button', 'leaflet-bar recenter-btn');
+      btn.type = 'button';
+      btn.title = 'Recenter map';
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>';
+      L.DomEvent.disableClickPropagation(btn);
+      L.DomEvent.on(btn, 'click', ()=> map.fitBounds(boundsForCurrentView(), {padding:[24,24]}));
+      return btn;
+    }
+  });
+  map.addControl(new RecenterControl());
+
+  // The map is built while the page may still be behind the password gate
+  // (i.e. the #map div is display:none, so it has zero width/height at this
+  // point). Leaflet caches that zero size internally and won't self-correct
+  // when the gate later opens, so we explicitly recompute the size and
+  // re-fit the view once the app becomes visible.
+  function refreshMapSize(){
+    map.invalidateSize();
+    map.fitBounds(boundsForCurrentView(), {padding:[24,24]});
+  }
+  if(!appRoot.classList.contains('hidden')){
+    refreshMapSize();
+  }
+  window.addEventListener('rae:unlocked', refreshMapSize);
+
+  let markerLayer = L.layerGroup().addTo(map);
+  const markerIndex = {};
+
+  function buildMarkers(list){
+    markerLayer.clearLayers();
+    list.forEach(d=>{
+      if(d.lat==null) return;
+      const liked = isFavorite(d.id);
+      const size = 12;
+      const icon = liked
+        ? L.divIcon({
+            html:`<div class="marker-heart" style="width:${size}px;height:${size}px;">♥</div>`,
+            className:'', iconSize:[size,size], iconAnchor:[size/2,size/2]
+          })
+        : L.divIcon({
+            html:`<div class="marker-pin" style="width:${size}px;height:${size}px;background:${getCss('--pin')}"></div>`,
+            className:'', iconSize:[size,size], iconAnchor:[size/2,size/2]
+          });
+      const m = L.marker([d.lat,d.lon], {icon});
+      m.bindPopup(`<b>${liked?'♥ ':''}${d.address}</b><br>${d.city}, ${d.county} Co.<br>${fmtMoney(d.price)} · ${fmtPSF(d.psfBuilding)}/SF<br><button class="popup-detail-btn" onclick="window.__raeOpenDetail('${d.id}')">View details →</button>`);
+      m.on('click', ()=>openDetail(d.id));
+      markerIndex[d.id]=m;
+      markerLayer.addLayer(m);
+    });
+  }
+
+  const tbody = document.getElementById('tableBody');
+  function buildTable(list){
+    document.getElementById('visibleCount').textContent = list.length;
+    const rows = list.map(d=>{
+      const liked = isFavorite(d.id);
+      const note = getNote(d.id);
+      return `
+      <tr data-id="${d.id}">
+        <td class="heart-cell"><button class="heart-btn" data-heart-id="${d.id}" title="${liked?'Remove from favorites':'Add to favorites'}">${liked?'♥':'♡'}</button></td>
+        <td>${d.address}</td>
+        <td>${d.city}</td>
+        <td>${d.county}</td>
+        <td><span class="tenancy-tag${d.tenancy==='Single-Tenant'?' single':''}">${d.tenancy==='Single-Tenant'?'Single':'Multi'}</span></td>
+        <td class="num">${fmtSF(d.buildingSF)}</td>
+        <td class="num">${d.landAC!=null?fmtAC(d.landAC):'—'}</td>
+        <td class="num">${fmtMoney(d.price)}</td>
+        <td class="num">${fmtPSF(d.psfBuilding)}</td>
+        <td class="num">${d.psfLand!=null?fmtPSF(d.psfLand):'—'}</td>
+        <td class="notes-cell${note?'':' empty'}">${note ? note.replace(/</g,'&lt;') : 'No notes'}</td>
+      </tr>`;
+    }).join('');
+    tbody.innerHTML = rows;
+    tbody.querySelectorAll('tr').forEach(tr=>{
+      tr.addEventListener('click', (e)=>{
+        if(e.target.closest('.heart-btn')) return;
+        openDetail(tr.dataset.id, true);
+      });
+    });
+    tbody.querySelectorAll('.heart-btn').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const id = btn.dataset.heartId;
+        toggleFavorite(id);
+        render();
+      });
+    });
+  }
+
+  function render(){
+    const list = filteredSorted();
+    buildTable(list);
+    buildMarkers(list);
+  }
+
+  const overlay = document.getElementById('detailOverlay');
+  const panel = document.getElementById('detailPanel');
+  function stat(label, value){ return `<div class="stat"><div class="stat-label">${label}</div><div class="stat-value">${value}</div></div>`; }
+
+  function openDetail(id, panMap){
+    selectedId = id;
+    const d = DATA.find(x=>x.id===id);
+    if(!d) return;
+    if(panMap && d.lat!=null){ map.setView([d.lat,d.lon], 12, {animate:true}); markerIndex[id] && markerIndex[id].openPopup(); }
+    const om = OMS[d.id];
+    const excerpts = d.excerptImages || [];
+
+    panel.innerHTML = `
+      <button class="detail-close" id="closeBtn">✕</button>
+      <div class="d-heart-row">
+        <div class="d-addr" style="margin:0;">${d.address}</div>
+        <button class="heart-btn" id="detailHeartBtn" title="${isFavorite(d.id)?'Remove from favorites':'Add to favorites'}">${isFavorite(d.id)?'♥':'♡'}</button>
+      </div>
+      <div class="d-sub">${d.city}, ${d.county} County · ${d.zip} · ${d.submarket} (${d.market}) · <span class="tenancy-tag${d.tenancy==='Single-Tenant'?' single':''}">${d.tenancy}</span></div>
+      <div class="stat-grid">
+        ${stat('Building Size', fmtSF(d.buildingSF)+' SF')}
+        ${stat('Land Size', d.landAC!=null? fmtAC(d.landAC)+' ac':'—')}
+        ${stat('Sale Price', fmtMoney(d.price))}
+        ${stat('$/PSF Building', fmtPSF(d.psfBuilding))}
+        ${stat('$/PSF Land', d.psfLand!=null? fmtPSF(d.psfLand):'—')}
+        ${stat('% Leased', d.leased!=null? d.leased+'%':'Not reported')}
+        ${stat('Investment Type', d.investType||'—')}
+        ${stat('Building Class / Year', (d.bldgClass||'—')+' · '+(d.yearBuilt||'—'))}
+        ${stat('Est. Drive from Glendale', d.driveMi!=null? '~'+Math.round(d.driveMi*1.25/62*60)+' min ('+d.driveMi+' mi)':'—')}
+        ${stat('Tenant Mix (CoStar)', d.secType||'—')}
+      </div>
+      ${d.propertyDesc ? `<div class="d-section"><h4>Property</h4><p>${d.propertyDesc}</p></div>` : ''}
+      ${d.tenantDesc ? `<div class="d-section"><h4>Tenancy</h4><p>${d.tenantDesc}</p></div>` : ''}
+      ${d.cityDesc ? `<div class="d-section"><h4>Location</h4><p>${d.cityDesc}</p></div>` : ''}
+      <div class="d-section">
+        <h4>Broker of Record</h4>
+        <div class="contact-line">${d.salesCompany || 'Not listed'}${d.salesContact? ' · '+d.salesContact : ''}${d.salesPhone? ' · '+d.salesPhone : ''}</div>
+      </div>
+      <div class="btn-row">
+        <a class="btn primary" href="${d.gmaps}" target="_blank" rel="noopener">Open in Google Maps</a>
+      </div>
+      <div class="d-section" style="margin-top:18px;">
+        <h4>User Notes</h4>
+        <textarea id="notesBox" placeholder="Notes are saved in this browser only — not shared with other users or devices.">${getNote(d.id)}</textarea>
+        <div class="notes-saved" id="notesSaved"></div>
+      </div>
+      <div class="d-section" style="margin-top:18px;">
+        <h4>Listing Flyer</h4>
+        ${excerpts.length ? `<div class="excerpt-gallery">${excerpts.map(img=>`<img src="images/${img}" alt="Listing flyer page" onclick="window.open('images/${img}','_blank')">`).join('')}</div>` : `<p class="empty-note">No flyer excerpt available for this property.</p>`}
+      </div>
+      <div class="d-section" style="margin-top:18px;">
+        <h4>Offering Memorandum</h4>
+        <div class="om-box">${om ? `<a class="btn brass" href="${om}" target="_blank" rel="noopener">📄 View OM</a>` : `<span class="empty-note">No OM attached. Add the PDF to the repo root and a line to oms.json to attach one (see README).</span>`}</div>
+      </div>
+    `;
+    document.getElementById('closeBtn').addEventListener('click', closeDetail);
+    document.getElementById('detailHeartBtn').addEventListener('click', (e)=>{
+      toggleFavorite(d.id);
+      const liked = isFavorite(d.id);
+      e.target.textContent = liked ? '♥' : '♡';
+      e.target.title = liked ? 'Remove from favorites' : 'Add to favorites';
+      buildTable(filteredSorted());
+      buildMarkers(filteredSorted());
+    });
+    let notesTimer = null;
+    const notesBox = document.getElementById('notesBox');
+    const notesSaved = document.getElementById('notesSaved');
+    notesBox.addEventListener('input', ()=>{
+      clearTimeout(notesTimer);
+      notesSaved.textContent = '';
+      notesTimer = setTimeout(()=>{
+        setNote(d.id, notesBox.value);
+        notesSaved.textContent = 'Saved (this browser only)';
+        buildTable(filteredSorted());
+      }, 400);
+    });
+    overlay.classList.add('open');
+  }
+  function closeDetail(){ overlay.classList.remove('open'); selectedId=null; }
+  window.__raeOpenDetail = (id) => openDetail(id, true);
+  overlay.addEventListener('click', (e)=>{ if(e.target===overlay) closeDetail(); });
+
+  // ---------------- county market information ----------------
+  const marketOverlay = document.getElementById('marketOverlay');
+  const marketPanel = document.getElementById('marketPanel');
+  const MARKET_CATEGORIES = [
+    { key: 'demographic', label: 'Demographics' },
+    { key: 'disposableIncome', label: 'Disposable Income' },
+    { key: 'netWorth', label: 'Net Worth' },
+    { key: 'expenditure', label: 'Consumer Expenditure' },
+  ];
+  let marketCounty = null;
+  let marketCategory = 'demographic';
+
+  function fmtMarketValue(row){
+    let out;
+    const v = row.value;
+    if(typeof v === 'number'){
+      if(Math.abs(v) < 1 && v !== 0){
+        out = (v*100).toLocaleString('en-US', {maximumFractionDigits:2}) + '%';
+      } else if(Number.isInteger(v)){
+        out = v.toLocaleString('en-US');
+      } else {
+        out = v.toLocaleString('en-US', {maximumFractionDigits:2});
+      }
+    } else {
+      out = String(v);
+    }
+    if(row.pct) out += ` (${row.pct})`;
+    return out;
+  }
+  function fmtExpRow(row){
+    const parts = [];
+    if(row.average != null) parts.push('$' + row.average.toLocaleString('en-US', {maximumFractionDigits:2}));
+    if(row.index != null) parts.push(`Index ${row.index}`);
+    return parts.join(' · ') || '—';
+  }
+
+  function renderMarketBody(){
+    const data = DEMOGRAPHICS[marketCounty];
+    const body = document.getElementById('marketBody');
+    if(!body) return;
+    if(!data){
+      body.innerHTML = '<p class="empty-note">No market information available for this county yet.</p>';
+      return;
+    }
+    const sections = data[marketCategory] || [];
+    if(!sections.length){
+      body.innerHTML = '<p class="empty-note">No data in this category for this county.</p>';
+      return;
+    }
+    const isExp = marketCategory === 'expenditure';
+    body.innerHTML = `<div class="market-grid">${sections.map(sec => `
+      <div class="market-card">
+        <h4>${escapeHtml(sec.title)}</h4>
+        <table><tbody>
+          ${sec.rows.map(r => `<tr><td class="mv-label">${escapeHtml(r.label)}</td><td class="mv-value">${isExp ? fmtExpRow(r) : fmtMarketValue(r)}</td></tr>`).join('')}
+        </tbody></table>
+      </div>`).join('')}</div>`;
+  }
+
+  function renderMarketPanel(){
+    const countiesSelected = [...activeCounties].sort();
+    if(!countiesSelected.includes(marketCounty)) marketCounty = countiesSelected[0];
+    marketPanel.innerHTML = `
+      <button class="market-close" id="marketCloseBtn">✕</button>
+      <div class="market-header">
+        <div>
+          <h3 class="market-title">County Market Information</h3>
+          <div class="market-sub">Demographics, income, net worth, and consumer spending by county. Source: Esri, via CBRE.</div>
+        </div>
+      </div>
+      <div class="market-tabs" id="marketCountyTabs"></div>
+      <div class="market-category-tabs" id="marketCategoryTabs"></div>
+      <div id="marketBody"></div>
+    `;
+    const countyTabs = document.getElementById('marketCountyTabs');
+    countiesSelected.forEach(c=>{
+      const tab = document.createElement('button');
+      tab.type = 'button';
+      tab.className = 'market-tab' + (c===marketCounty ? ' active' : '');
+      tab.textContent = c;
+      tab.addEventListener('click', ()=>{ marketCounty = c; renderMarketPanel(); });
+      countyTabs.appendChild(tab);
+    });
+    const catTabs = document.getElementById('marketCategoryTabs');
+    MARKET_CATEGORIES.forEach(cat=>{
+      const tab = document.createElement('button');
+      tab.type = 'button';
+      tab.className = 'market-category-tab' + (cat.key===marketCategory ? ' active' : '');
+      tab.textContent = cat.label;
+      tab.addEventListener('click', ()=>{ marketCategory = cat.key; renderMarketPanel(); });
+      catTabs.appendChild(tab);
+    });
+    document.getElementById('marketCloseBtn').addEventListener('click', closeMarketInfo);
+    renderMarketBody();
+  }
+
+  function openMarketInfo(){
+    if(!activeCounties.size) return;
+    if(!marketCounty || !activeCounties.has(marketCounty)){
+      marketCounty = [...activeCounties].sort()[0];
+    }
+    renderMarketPanel();
+    marketOverlay.classList.add('open');
+  }
+  function closeMarketInfo(){ marketOverlay.classList.remove('open'); }
+  marketOverlay.addEventListener('click', (e)=>{ if(e.target===marketOverlay) closeMarketInfo(); });
+
+  render();
+})();
+</script>
+</body>
+</html>
