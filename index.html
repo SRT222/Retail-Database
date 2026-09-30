@@ -60,6 +60,11 @@ header.top{
   letter-spacing:.04em; font-size:10.5px; white-space:nowrap;
 }
 .criteria-ribbon .ribbon-sep{color:var(--line); font-weight:400;}
+.tenancy-tag{
+  display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px;
+  font-weight:600; letter-spacing:.02em; background:var(--pin); color:#fff; opacity:.85;
+}
+.tenancy-tag.single{background:var(--brass-deep);}
 
 /* --------- filter bar --------- */
 .filters{
@@ -67,6 +72,7 @@ header.top{
   display:flex; flex-wrap:wrap; gap:14px 22px; align-items:flex-end;
 }
 .f-group{display:flex; flex-direction:column; gap:4px;}
+.chip-group{display:flex; flex-direction:column; gap:4px; width:100%;}
 .f-label{font-size:11px; color:var(--slate); font-weight:600;}
 .f-range{display:flex; gap:6px; align-items:center;}
 .f-range input[type=number]{
@@ -90,6 +96,23 @@ select{
 .chip.active{background:var(--ink); color:var(--panel); border-color:var(--ink);}
 .reset-link{font-size:12.5px; color:var(--slate); text-decoration:underline; cursor:pointer; background:none; border:none; padding:6px 2px; align-self:flex-end;}
 .reset-link.active{color:#C4453A; font-weight:700; text-decoration:none;}
+.btn-outline{
+  text-decoration:none; border:1px solid var(--line); border-radius:6px;
+  padding:6px 10px; background:var(--paper);
+}
+.btn-outline:hover{border-color:var(--brass-deep); color:var(--brass-deep);}
+.btn-outline.active{background:var(--brass-deep); color:#fff; border-color:var(--brass-deep);}
+.preset-chip{
+  display:flex; align-items:center; gap:6px; padding:4px 6px 4px 11px; border:1px solid var(--line);
+  border-radius:20px; font-size:12.5px; background:var(--paper); color:var(--ink-soft);
+}
+.preset-chip .preset-name{cursor:pointer;}
+.preset-chip .preset-name:hover{color:var(--brass-deep); text-decoration:underline;}
+.preset-chip .preset-del{
+  cursor:pointer; background:none; border:none; color:var(--slate); font-size:14px; line-height:1;
+  padding:2px 4px; border-radius:50%;
+}
+.preset-chip .preset-del:hover{color:#C4453A;}
 
 /* --------- map hero --------- */
 #map{width:100%; height:58vh; min-height:380px; background:#dfe3e6; position:relative;}
@@ -231,7 +254,7 @@ tbody tr:hover{background:var(--panel);}
 <div class="criteria-ribbon">
   <span class="ribbon-label">Sourcing criteria</span>
   <span class="ribbon-sep">·</span>
-  <span>Southern California retail properties for sale as of 9/28/2026 — multi-tenant, 5,000+ SF, priced at $10M or less and $500/PSF or less.</span>
+  <span>Southern California retail properties for sale as of 9/28/2026 — 5,000+ SF, priced at $10M or less and $500/PSF or less.</span>
 </div>
 
 <div class="filters">
@@ -266,10 +289,32 @@ tbody tr:hover{background:var(--panel);}
     </select>
   </div>
 
-  <button class="reset-link" id="resetBtn">Reset filters</button>
-  <button class="reset-link" id="favToggle">♡ Favorites only</button>
+  <div class="f-group">
+    <span class="f-label">Applies to filters above</span>
+    <button class="reset-link btn-outline" id="resetBtn">Reset filters</button>
+  </div>
 
-  <div class="chip-row" id="countyChips" style="width:100%;"></div>
+  <div class="f-group">
+    <span class="f-label">Saved Views</span>
+    <div class="f-range" style="flex-wrap:wrap;">
+      <button type="button" class="reset-link btn-outline" id="savePresetBtn">+ Save current view</button>
+      <button type="button" class="reset-link btn-outline" id="viewPresetsBtn">View saved views</button>
+    </div>
+  </div>
+
+  <button class="reset-link btn-outline" id="favToggle">♡ Favorites only</button>
+  <button class="reset-link btn-outline" id="exportFavBtn">⬇ Export favorites to Excel</button>
+
+  <div class="chip-row" id="presetsList" style="width:100%; display:none;"></div>
+
+  <div class="chip-group">
+    <span class="f-label">Tenancy</span>
+    <div class="chip-row" id="tenancyChips"></div>
+  </div>
+  <div class="chip-group">
+    <span class="f-label">County</span>
+    <div class="chip-row" id="countyChips"></div>
+  </div>
 </div>
 
 <div id="map"></div>
@@ -282,6 +327,7 @@ tbody tr:hover{background:var(--panel);}
         <th data-key="address">Address</th>
         <th data-key="city">City</th>
         <th data-key="county">County</th>
+        <th data-key="tenancy">Tenancy</th>
         <th data-key="buildingSF" class="num">Building SF</th>
         <th data-key="landAC" class="num">Land (ac)</th>
         <th data-key="price" class="num">Price</th>
@@ -335,6 +381,7 @@ document.getElementById('gateForm').addEventListener('submit', (e)=>{
 </script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 async function loadJSON(path){ const r = await fetch(path); return r.json(); }
 
@@ -345,6 +392,7 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
   try { OMS = await loadJSON('/oms.json'); } catch(e) { OMS = {}; }
 
   let activeCounties = new Set();
+  let activeTenancy = new Set();
   let sortMode = 'address-asc';
   let searchTerm = '';
   let selectedId = null;
@@ -380,11 +428,19 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
     saveNotes(notesStore);
   }
 
+  // ---------------- saved filter-view presets (stored locally, max 10) ----------------
+  const PRESETS_KEY = 'rae_presets';
+  const MAX_PRESETS = 10;
+  function loadPresets(){ try{ return JSON.parse(localStorage.getItem(PRESETS_KEY) || '[]'); }catch(e){ return []; } }
+  function savePresetsList(arr){ try{ localStorage.setItem(PRESETS_KEY, JSON.stringify(arr)); }catch(e){} }
+  let presets = loadPresets();
+
   const counties = [...new Set(DATA.map(d=>d.county))].sort();
 
   function fmtMoney(n){ return '$'+n.toLocaleString('en-US'); }
   function fmtSF(n){ return n.toLocaleString('en-US'); }
   function getCss(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim() || '#2B3A55'; }
+  function escapeHtml(s){ return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
   const chipRow = document.getElementById('countyChips');
   counties.forEach(c=>{
@@ -397,6 +453,20 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
       render();
     });
     chipRow.appendChild(chip);
+  });
+
+  const tenancyTypes = [...new Set(DATA.map(d=>d.tenancy))].sort();
+  const tenancyChipRow = document.getElementById('tenancyChips');
+  tenancyTypes.forEach(t=>{
+    const chip = document.createElement('div');
+    chip.className='chip';
+    chip.textContent = t + ' (' + DATA.filter(d=>d.tenancy===t).length + ')';
+    chip.addEventListener('click', ()=>{
+      if(activeTenancy.has(t)) activeTenancy.delete(t); else activeTenancy.add(t);
+      chip.classList.toggle('active');
+      render();
+    });
+    tenancyChipRow.appendChild(chip);
   });
 
   // ---- live number formatting for the range filter inputs ----
@@ -446,6 +516,8 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
 
   document.getElementById('resetBtn').addEventListener('click', ()=>{
     activeCounties.clear();
+    activeTenancy.clear();
+    document.querySelectorAll('#tenancyChips .chip').forEach(c=>c.classList.remove('active'));
     document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
     document.getElementById('searchBox').value=''; searchTerm='';
     document.getElementById('sortSel').value='address-asc'; sortMode='address-asc';
@@ -455,11 +527,128 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
     document.getElementById('favToggle').textContent = '♡ Favorites only';
     render();
   });
+
+  // ---- preset snapshot / apply / render ----
+  function currentFilterSnapshot(){
+    return {
+      filterState: {...filterState},
+      activeCounties: [...activeCounties],
+      activeTenancy: [...activeTenancy],
+      sortMode, searchTerm,
+    };
+  }
+
+  function chipLabelMatches(chip, name){
+    return chip.textContent.replace(/\s*\(\d+\)$/, '') === name;
+  }
+
+  function applyFilterSnapshot(snap){
+    filterState = { sfMin:null, sfMax:null, priceMin:null, priceMax:null, landMin:null, landMax:null, psfMin:null, psfMax:null, ...(snap.filterState||{}) };
+    activeCounties = new Set(snap.activeCounties || []);
+    activeTenancy = new Set(snap.activeTenancy || []);
+    sortMode = snap.sortMode || 'address-asc';
+    searchTerm = snap.searchTerm || '';
+
+    document.getElementById('searchBox').value = searchTerm;
+    if(!sortMode.startsWith('col:')) document.getElementById('sortSel').value = sortMode;
+    rangeIds.forEach(id=>{
+      const v = filterState[id];
+      const el = document.getElementById(id);
+      el.value = (v==null) ? '' : formatLive(String(v), rangeConfig[id]);
+    });
+    document.querySelectorAll('#countyChips .chip').forEach(c=>{
+      c.classList.toggle('active', [...activeCounties].some(name=>chipLabelMatches(c,name)));
+    });
+    document.querySelectorAll('#tenancyChips .chip').forEach(c=>{
+      c.classList.toggle('active', [...activeTenancy].some(name=>chipLabelMatches(c,name)));
+    });
+    render();
+  }
+
+  function renderPresetsUI(){
+    const wrap = document.getElementById('presetsList');
+    wrap.innerHTML = '';
+    if(!presets.length){
+      const empty = document.createElement('span');
+      empty.style.cssText = 'font-size:12.5px; color:var(--slate);';
+      empty.textContent = 'No saved views yet.';
+      wrap.appendChild(empty);
+    }
+    presets.forEach((p, idx)=>{
+      const chip = document.createElement('div');
+      chip.className = 'preset-chip';
+      chip.innerHTML = `<span class="preset-name" title="Load this view">${escapeHtml(p.name)}</span><button type="button" class="preset-del" title="Delete this view">×</button>`;
+      chip.querySelector('.preset-name').addEventListener('click', ()=> applyFilterSnapshot(p.snapshot));
+      chip.querySelector('.preset-del').addEventListener('click', (e)=>{
+        e.stopPropagation();
+        if(!confirm(`Delete the saved view "${p.name}"?`)) return;
+        presets.splice(idx, 1);
+        savePresetsList(presets);
+        renderPresetsUI();
+      });
+      wrap.appendChild(chip);
+    });
+  }
+  renderPresetsUI();
+
+  document.getElementById('viewPresetsBtn').addEventListener('click', (e)=>{
+    const wrap = document.getElementById('presetsList');
+    const showing = wrap.style.display !== 'none';
+    wrap.style.display = showing ? 'none' : 'flex';
+    e.target.classList.toggle('active', !showing);
+  });
+
+  document.getElementById('savePresetBtn').addEventListener('click', ()=>{
+    if(presets.length >= MAX_PRESETS){
+      alert(`You can save up to ${MAX_PRESETS} views. Delete one before saving a new one.`);
+      return;
+    }
+    const name = prompt('Name this filter view (e.g. "Under $2M, Inland Empire"):', '');
+    if(!name || !name.trim()) return;
+    presets.push({ name: name.trim().slice(0, 60), snapshot: currentFilterSnapshot() });
+    savePresetsList(presets);
+    renderPresetsUI();
+    document.getElementById('presetsList').style.display = 'flex';
+    document.getElementById('viewPresetsBtn').classList.add('active');
+  });
   document.getElementById('favToggle').addEventListener('click', (e)=>{
     favoritesOnly = !favoritesOnly;
     e.target.classList.toggle('active', favoritesOnly);
     e.target.textContent = favoritesOnly ? '♥ Favorites only' : '♡ Favorites only';
     render();
+  });
+  document.getElementById('exportFavBtn').addEventListener('click', ()=>{
+    const favList = DATA.filter(d=>isFavorite(d.id));
+    if(!favList.length){
+      alert('No favorited properties yet — heart a few properties first, then export.');
+      return;
+    }
+    const rows = favList.map(d=>({
+      'Property ID': d.id,
+      'Tenancy': d.tenancy,
+      'Address': d.address,
+      'City': d.city,
+      'County': d.county,
+      'Submarket': d.submarket,
+      'Market': d.market,
+      'Building SF': d.buildingSF,
+      'Land (ac)': d.landAC,
+      'Price': d.price,
+      '$/PSF Building': d.psfBuilding,
+      '$/PSF Land': d.psfLand,
+      '% Leased': d.leased,
+      'Building Class': d.bldgClass,
+      'Year Built': d.yearBuilt,
+      'Drive from Glendale (mi)': d.driveMi,
+      'Google Maps Link': d.gmaps,
+      'User Notes': getNote(d.id),
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = Object.keys(rows[0]).map(k => ({ wch: Math.max(14, k.length + 2) }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Favorites');
+    const stamp = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `retail-explorer-favorites-${stamp}.xlsx`);
   });
   document.getElementById('searchBox').addEventListener('input', (e)=>{ searchTerm=e.target.value.trim().toLowerCase(); render(); });
   document.getElementById('sortSel').addEventListener('change', (e)=>{ sortMode=e.target.value; render(); });
@@ -484,6 +673,7 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
     let list = DATA.filter(d=>{
       if(favoritesOnly && !isFavorite(d.id)) return false;
       if(activeCounties.size && !activeCounties.has(d.county)) return false;
+      if(activeTenancy.size && !activeTenancy.has(d.tenancy)) return false;
       if(searchTerm && !(d.address.toLowerCase().includes(searchTerm) || d.city.toLowerCase().includes(searchTerm))) return false;
       if(filterState.sfMin!=null && d.buildingSF < filterState.sfMin) return false;
       if(filterState.sfMax!=null && d.buildingSF > filterState.sfMax) return false;
@@ -605,6 +795,7 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
         <td>${d.address}</td>
         <td>${d.city}</td>
         <td>${d.county}</td>
+        <td><span class="tenancy-tag${d.tenancy==='Single-Tenant'?' single':''}">${d.tenancy==='Single-Tenant'?'Single':'Multi'}</span></td>
         <td class="num">${fmtSF(d.buildingSF)}</td>
         <td class="num">${d.landAC!=null?d.landAC:'—'}</td>
         <td class="num">${fmtMoney(d.price)}</td>
@@ -654,7 +845,7 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
         <div class="d-addr" style="margin:0;">${d.address}</div>
         <button class="heart-btn" id="detailHeartBtn" title="${isFavorite(d.id)?'Remove from favorites':'Add to favorites'}">${isFavorite(d.id)?'♥':'♡'}</button>
       </div>
-      <div class="d-sub">${d.city}, ${d.county} County · ${d.zip} · ${d.submarket} (${d.market})</div>
+      <div class="d-sub">${d.city}, ${d.county} County · ${d.zip} · ${d.submarket} (${d.market}) · <span class="tenancy-tag${d.tenancy==='Single-Tenant'?' single':''}">${d.tenancy}</span></div>
       <div class="stat-grid">
         ${stat('Building Size', fmtSF(d.buildingSF)+' SF')}
         ${stat('Land Size', d.landAC!=null? d.landAC+' ac':'—')}
