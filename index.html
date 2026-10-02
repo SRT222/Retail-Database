@@ -14,21 +14,21 @@
 :root{
   --ink:#1B2430; --ink-soft:#3E4A59; --paper:#EEF1F4; --panel:#FFFFFF;
   --line:#D7DCE1; --brass:#B98B34; --brass-deep:#8F6A24; --slate:#5B6B7A; --pin:#2B3A55; --liked:#3F7D58;
-  --desert:#C1603C; --desert-deep:#9B4A2C;
+  --desert:#C1603C; --desert-deep:#9B4A2C; --sold:#6A4C93; --sold-deep:#4F3870; --sold-dot:#AD72E0;
   color-scheme: light;
 }
 :root:not([data-theme="light"]) {
   @media (prefers-color-scheme: dark) {
     --ink:#EDEFF2; --ink-soft:#B7C0CC; --paper:#12161C; --panel:#1A1F27;
     --line:#2A313B; --brass:#D3A24E; --brass-deep:#E7BE72; --slate:#8A97A5; --pin:#7C93B8; --liked:#5FA378;
-    --desert:#E08862; --desert-deep:#EDA67F;
+    --desert:#E08862; --desert-deep:#EDA67F; --sold:#A98FD2; --sold-deep:#C3ADE3; --sold-dot:#D2B4F5;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"]{
   --ink:#EDEFF2; --ink-soft:#B7C0CC; --paper:#12161C; --panel:#1A1F27;
   --line:#2A313B; --brass:#D3A24E; --brass-deep:#E7BE72; --slate:#8A97A5; --pin:#7C93B8; --liked:#5FA378;
-  --desert:#E08862; --desert-deep:#EDA67F;
+  --desert:#E08862; --desert-deep:#EDA67F; --sold:#A98FD2; --sold-deep:#C3ADE3; --sold-dot:#D2B4F5;
   color-scheme: dark;
 }
 *{box-sizing:border-box;}
@@ -80,6 +80,21 @@ header.top{
 }
 body.cluster-idw .criteria-ribbon{border-bottom-color:var(--desert-deep);}
 body.cluster-idw .ribbon-label{color:var(--desert-deep);}
+.mode-bar{
+  display:flex; gap:10px; padding:10px 20px; background:var(--panel); border-bottom:1px solid var(--line);
+}
+.mode-btn{
+  flex:1; max-width:220px; padding:9px 16px; border:1.5px solid var(--line); border-radius:8px;
+  background:var(--paper); color:var(--ink-soft); font-size:14px; font-weight:700; cursor:pointer;
+  transition:border-color .15s, background .15s, color .15s;
+}
+.mode-btn:hover{border-color:var(--sold-deep);}
+.mode-btn.active[data-mode="listings"]{background:var(--ink); border-color:var(--ink); color:var(--panel);}
+.mode-btn.active[data-mode="sales"]{background:var(--sold-deep); border-color:var(--sold-deep); color:#fff;}
+.sale-tag{
+  display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px;
+  font-weight:600; letter-spacing:.02em; background:var(--sold-deep); color:#fff; opacity:.9;
+}
 .tenancy-tag{
   display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px;
   font-weight:600; letter-spacing:.02em; background:var(--pin); color:#fff; opacity:.85;
@@ -94,12 +109,12 @@ body.cluster-idw .ribbon-label{color:var(--desert-deep);}
 .f-group{display:flex; flex-direction:column; gap:4px;}
 .chip-group{display:flex; flex-direction:column; gap:4px; width:100%;}
 .f-label{font-size:11px; color:var(--slate); font-weight:600;}
-.f-range{display:flex; gap:6px; align-items:center;}
-.f-range input[type=number]{
-  width:92px; padding:6px 8px; border:1px solid var(--line); border-radius:6px;
+.f-range{display:flex; gap:6px; align-items:center; max-width:100%;}
+.f-range input{
+  width:92px; flex:1 1 70px; min-width:0; max-width:120px; padding:6px 8px; border:1px solid var(--line); border-radius:6px;
   background:var(--paper); color:var(--ink); font-size:13px;
 }
-.f-range span{color:var(--slate); font-size:12px;}
+.f-range span{color:var(--slate); font-size:12px; flex:0 0 auto;}
 .search-box{
   padding:7px 12px; border:1px solid var(--line); border-radius:6px;
   background:var(--paper); color:var(--ink); font-size:14px; min-width:200px;
@@ -208,6 +223,57 @@ tbody tr:hover{background:var(--panel);}
 .d-section h4{font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--slate); margin:0 0 6px; font-weight:600;}
 .d-section p{font-size:14px; line-height:1.55; margin:0 0 8px;}
 .empty-note{font-size:13px; color:var(--slate); font-style:italic;}
+.comp-mini-table{width:100%; min-width:0; border-collapse:collapse; font-size:13px; table-layout:fixed;}
+.comp-mini-table thead td{padding:2px 4px 6px; font-size:11px; color:var(--slate); font-weight:600; border-bottom:1px solid var(--line);}
+.comp-mini-table thead td.num{text-align:right;}
+.comp-mini-table td{padding:6px 4px; border-bottom:1px dotted var(--line); overflow-wrap:break-word; word-break:break-word;}
+.comp-mini-table td:nth-child(1){width:18%;}
+.comp-mini-table td:nth-child(2){width:36%;}
+.comp-mini-table td:nth-child(3){width:26%;}
+.comp-mini-table td:nth-child(4){width:20%;}
+.comp-mini-table tr:last-child td{border-bottom:none;}
+.comp-mini-table tr.comp-row{cursor:pointer;}
+.comp-mini-table tr.comp-row:hover td{background:var(--paper); color:var(--sold-deep);}
+.comp-mini-table td.num{text-align:right; font-weight:600; white-space:normal;}
+.comp-see-more{margin-top:8px; font-size:12.5px; padding:5px 10px;}
+
+/* --------- county market information overlay --------- */
+.market-overlay{
+  position:fixed; inset:0; background:rgba(10,14,18,.5); z-index:2100;
+  display:none; align-items:flex-start; justify-content:center; overflow-y:auto; padding:32px 16px;
+}
+.market-overlay.open{display:flex;}
+.market-panel{
+  width:min(1120px, 100%); background:var(--panel); border-radius:10px;
+  box-shadow:0 20px 60px rgba(0,0,0,.35); padding:24px 28px 40px; margin-bottom:32px; position:relative;
+  overflow-x:hidden;
+}
+.market-header{display:flex; align-items:flex-start; justify-content:space-between; gap:16px;}
+.market-title{font-family:'Fraunces',serif; font-size:25px; font-weight:600; margin:0;}
+.market-sub{font-size:13px; color:var(--slate); margin-top:4px;}
+.market-tabs{display:flex; gap:8px; flex-wrap:wrap; margin:16px 0 4px;}
+.market-tab{padding:6px 14px; border:1px solid var(--line); border-radius:20px; font-size:13px; cursor:pointer; background:var(--paper); color:var(--ink-soft); font-weight:600;}
+.market-tab.active{background:var(--brass-deep); color:#fff; border-color:var(--brass-deep);}
+body.cluster-idw .market-tab.active{background:var(--desert-deep); border-color:var(--desert-deep);}
+.market-category-tabs{display:flex; gap:6px; flex-wrap:wrap; margin:14px 0 20px; padding-bottom:16px; border-bottom:1px solid var(--line);}
+.market-category-tab{font-size:12.5px; padding:6px 12px; border:1px solid var(--line); border-radius:6px; background:var(--paper); color:var(--ink-soft); cursor:pointer; font-weight:600;}
+.market-category-tab.active{background:var(--ink); color:var(--panel); border-color:var(--ink);}
+.market-grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:18px 20px;}
+@media (max-width: 720px){ .market-grid{grid-template-columns:1fr;} }
+.market-card{border:1px solid var(--line); border-radius:8px; padding:14px 18px; background:var(--paper); overflow:hidden; min-width:0;}
+.market-card h4{font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--brass-deep); margin:0 0 10px; font-weight:700;}
+body.cluster-idw .market-card h4{color:var(--desert-deep);}
+.market-card table{width:100%; min-width:0; border-collapse:collapse; font-size:13px; table-layout:fixed;}
+.market-card td{padding:5px 0; border-bottom:1px dotted var(--line); vertical-align:top; overflow-wrap:break-word; word-break:break-word; line-height:1.4;}
+.market-card tr:last-child td{border-bottom:none;}
+.market-card td.mv-label{color:var(--ink-soft); width:64%; padding-right:10px;}
+.market-card td.mv-value{text-align:right; font-weight:600; width:36%; white-space:normal;}
+.market-close{
+  position:absolute; top:20px; right:24px; background:none; border:1px solid var(--line); border-radius:6px;
+  width:30px; height:30px; font-size:16px; cursor:pointer; color:var(--ink);
+}
+.btn-outline:disabled{opacity:.4; cursor:not-allowed;}
+.btn-outline:disabled:hover{border-color:var(--line); color:var(--ink-soft);}
 .btn-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;}
 .btn{
   display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:6px;
@@ -277,6 +343,11 @@ tbody tr:hover{background:var(--panel);}
   <span id="ribbonText">Southern California and Inland Desert West retail properties for sale as of 9/28/2026 — 5,000+ SF, priced at $10M or less and $500/PSF or less.</span>
 </div>
 
+<div class="mode-bar" id="modeBar">
+  <button type="button" class="mode-btn active" data-mode="listings">🏢 Listings</button>
+  <button type="button" class="mode-btn" data-mode="sales">💰 Sales Comps</button>
+</div>
+
 <div class="cluster-bar" id="clusterBar">
   <button type="button" class="cluster-btn" data-cluster="Southern California">Southern California</button>
   <button type="button" class="cluster-btn" data-cluster="Inland Desert West">Inland Desert West</button>
@@ -301,17 +372,14 @@ tbody tr:hover{background:var(--panel);}
     <span class="f-label">$/PSF Building</span>
     <div class="f-range"><input type="text" inputmode="decimal" id="psfMin" placeholder="Min"><span>–</span><input type="text" inputmode="decimal" id="psfMax" placeholder="Max"></div>
   </div>
+  <div class="f-group" id="dateFilterGroup" style="display:none;">
+    <span class="f-label">Sale Date</span>
+    <div class="f-range"><input type="date" id="dateFrom"><span>–</span><input type="date" id="dateTo"></div>
+  </div>
 
   <div class="f-group">
     <span class="f-label">Sort</span>
-    <select id="sortSel">
-      <option value="address-asc">Address (A → Z)</option>
-      <option value="price-asc">Price (low → high)</option>
-      <option value="price-desc">Price (high → low)</option>
-      <option value="psf-asc">$/PSF Building (low → high)</option>
-      <option value="size-desc">Building Size (large → small)</option>
-      <option value="drive-asc">Est. drive from Glendale</option>
-    </select>
+    <select id="sortSel"></select>
   </div>
 
   <div class="f-group">
@@ -332,7 +400,7 @@ tbody tr:hover{background:var(--panel);}
 
   <div class="chip-row" id="presetsList" style="width:100%; display:none;"></div>
 
-  <div class="chip-group">
+  <div class="chip-group" id="tenancyGroup">
     <span class="f-label">Tenancy</span>
     <div class="chip-row" id="tenancyChips"></div>
   </div>
@@ -346,27 +414,17 @@ tbody tr:hover{background:var(--panel);}
 
 <div class="table-wrap">
   <table id="propTable">
-    <thead>
-      <tr>
-        <th></th>
-        <th data-key="address">Address</th>
-        <th data-key="city">City</th>
-        <th data-key="county">County</th>
-        <th data-key="tenancy">Tenancy</th>
-        <th data-key="buildingSF" class="num">Building SF</th>
-        <th data-key="landAC" class="num">Land (ac)</th>
-        <th data-key="price" class="num">Price</th>
-        <th data-key="psfBuilding" class="num">$/PSF Bldg</th>
-        <th data-key="psfLand" class="num">$/PSF Land</th>
-        <th>User Notes</th>
-      </tr>
-    </thead>
+    <thead id="tableHead"></thead>
     <tbody id="tableBody"></tbody>
   </table>
 </div>
 
 <div class="detail-overlay" id="detailOverlay">
   <div class="detail-panel" id="detailPanel"></div>
+</div>
+
+<div class="market-overlay" id="marketOverlay">
+  <div class="market-panel" id="marketPanel"></div>
 </div>
 
 </div><!-- #appRoot -->
@@ -411,10 +469,16 @@ document.getElementById('gateForm').addEventListener('submit', (e)=>{
 async function loadJSON(path){ const r = await fetch(path); return r.json(); }
 
 (async function init(){
-  const DATA = await loadJSON('/data.json');
+  const LISTINGS = await loadJSON('/data.json');
+  let SALES = [];
+  try { SALES = await loadJSON('/sales-comps.json'); } catch(e) { SALES = []; }
+  let mode = 'listings';
+  let DATA = LISTINGS;
   document.getElementById('totalCount').textContent = DATA.length;
   let OMS = {};
   try { OMS = await loadJSON('/oms.json'); } catch(e) { OMS = {}; }
+  let DEMOGRAPHICS = {};
+  try { DEMOGRAPHICS = await loadJSON('/demographics.json'); } catch(e) { DEMOGRAPHICS = {}; }
 
   let activeCounties = new Set();
   let activeTenancy = new Set();
@@ -422,7 +486,7 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
   let sortMode = 'address-asc';
   let searchTerm = '';
   let selectedId = null;
-  let filterState = { sfMin:null, sfMax:null, priceMin:null, priceMax:null, landMin:null, landMax:null, psfMin:null, psfMax:null };
+  let filterState = { sfMin:null, sfMax:null, priceMin:null, priceMax:null, landMin:null, landMax:null, psfMin:null, psfMax:null, dateFrom:null, dateTo:null };
   let sortDir = {};
   let favoritesOnly = false;
 
@@ -462,6 +526,15 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
   let presets = loadPresets();
   function fmtMoney(n){ return '$'+n.toLocaleString('en-US'); }
   function fmtSF(n){ return n.toLocaleString('en-US'); }
+  function fmtAC(n){ return n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+  function fmtPSF(n){ return '$'+n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+  function fmtDate(iso){
+    if(!iso) return null;
+    const parts = iso.split('-');
+    if(parts.length !== 3) return iso;
+    const [y,m,d] = parts;
+    return `${parseInt(m,10)}/${parseInt(d,10)}/${y}`;
+  }
   function getCss(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim() || '#2B3A55'; }
   function escapeHtml(s){ return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
@@ -480,39 +553,81 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
         if(activeCounties.has(c)) activeCounties.delete(c); else activeCounties.add(c);
         chip.classList.toggle('active');
         render();
+        map.fitBounds(boundsForCurrentView(), {padding:[24,24]});
+        updateMarketInfoBtn();
       });
       chipRow.appendChild(chip);
     });
+    const marketBtn = document.createElement('button');
+    marketBtn.type = 'button';
+    marketBtn.className = 'reset-link btn-outline';
+    marketBtn.id = 'marketInfoBtn';
+    marketBtn.textContent = '📊 County Quick Stats';
+    marketBtn.style.marginLeft = '4px';
+    marketBtn.disabled = activeCounties.size === 0;
+    marketBtn.addEventListener('click', openMarketInfo);
+    chipRow.appendChild(marketBtn);
+  }
+  function updateMarketInfoBtn(){
+    const btn = document.getElementById('marketInfoBtn');
+    if(btn) btn.disabled = activeCounties.size === 0;
   }
   renderCountyChips();
 
-  const tenancyTypes = [...new Set(DATA.map(d=>d.tenancy))].sort();
   const tenancyChipRow = document.getElementById('tenancyChips');
-  tenancyTypes.forEach(t=>{
-    const chip = document.createElement('div');
-    chip.className='chip';
-    chip.textContent = t + ' (' + DATA.filter(d=>d.tenancy===t).length + ')';
-    chip.addEventListener('click', ()=>{
-      if(activeTenancy.has(t)) activeTenancy.delete(t); else activeTenancy.add(t);
-      chip.classList.toggle('active');
-      render();
+  const tenancyGroup = document.getElementById('tenancyGroup');
+  function renderTenancyChips(){
+    tenancyChipRow.innerHTML = '';
+    if(mode==='sales'){
+      tenancyGroup.style.display = 'none';
+      activeTenancy.clear();
+      return;
+    }
+    tenancyGroup.style.display = '';
+    const tenancyTypes = [...new Set(DATA.map(d=>d.tenancy).filter(Boolean))].sort();
+    tenancyTypes.forEach(t=>{
+      const chip = document.createElement('div');
+      chip.className = 'chip' + (activeTenancy.has(t) ? ' active' : '');
+      chip.textContent = t + ' (' + DATA.filter(d=>d.tenancy===t).length + ')';
+      chip.addEventListener('click', ()=>{
+        if(activeTenancy.has(t)) activeTenancy.delete(t); else activeTenancy.add(t);
+        chip.classList.toggle('active');
+        render();
+      });
+      tenancyChipRow.appendChild(chip);
     });
-    tenancyChipRow.appendChild(chip);
-  });
+  }
+  renderTenancyChips();
 
   // ---- cluster toggle (Southern California / Inland Desert West) ----
   const RIBBON_TEXT = {
-    'null': 'Southern California and Inland Desert West retail properties for sale as of 9/28/2026 — 5,000+ SF, priced at $10M or less and $500/PSF or less.',
-    'Southern California': 'Southern California retail properties for sale as of 9/28/2026 — 5,000+ SF, priced at $10M or less and $500/PSF or less.',
-    'Inland Desert West': 'Inland Desert West retail properties (Las Vegas metro area and Eastern Sierra) for sale as of 9/28/2026 — 5,000+ SF, priced at $10M or less and $500/PSF or less.',
+    listings: {
+      'null': 'Southern California and Inland Desert West retail properties for sale as of 9/28/2026 — 5,000+ SF, priced at $10M or less and $500/PSF or less.',
+      'Southern California': 'Southern California retail properties for sale as of 9/28/2026 — 5,000+ SF, priced at $10M or less and $500/PSF or less.',
+      'Inland Desert West': 'Inland Desert West retail properties (Las Vegas metro area and Eastern Sierra) for sale as of 9/28/2026 — 5,000+ SF, priced at $10M or less and $500/PSF or less.',
+    },
+    sales: {
+      'null': 'Southern California and Inland Desert West retail properties sold after 1/1/2026 — 5,000+ SF, sold $10M or less and $500/PSF or less.',
+      'Southern California': 'Southern California retail properties sold after 1/1/2026 — 5,000+ SF, sold $10M or less and $500/PSF or less.',
+      'Inland Desert West': 'Inland Desert West retail properties (Las Vegas metro area and Eastern Sierra) sold after 1/1/2026 — 5,000+ SF, sold $10M or less and $500/PSF or less.',
+    },
+    both: {
+      'null': 'Southern California and Inland Desert West retail listings and sale comps — 5,000+ SF, $10M or less and $500/PSF or less (listings as of 9/28/2026; comps sold after 1/1/2026).',
+      'Southern California': 'Southern California retail listings and sale comps — 5,000+ SF, $10M or less and $500/PSF or less (listings as of 9/28/2026; comps sold after 1/1/2026).',
+      'Inland Desert West': 'Inland Desert West retail listings and sale comps (Las Vegas metro area and Eastern Sierra) — 5,000+ SF, $10M or less and $500/PSF or less (listings as of 9/28/2026; comps sold after 1/1/2026).',
+    },
   };
+  function updateRibbonText(){
+    const modeKey = mode === null ? 'both' : mode;
+    document.getElementById('ribbonText').textContent = RIBBON_TEXT[modeKey][String(activeCluster)];
+  }
   function setCluster(cl){
     activeCluster = (activeCluster === cl) ? null : cl;
     document.querySelectorAll('.cluster-btn').forEach(b=>{
       b.classList.toggle('active', b.dataset.cluster === activeCluster);
     });
     document.body.classList.toggle('cluster-idw', activeCluster === 'Inland Desert West');
-    document.getElementById('ribbonText').textContent = RIBBON_TEXT[String(activeCluster)];
+    updateRibbonText();
     document.getElementById('totalCount').textContent = activeCluster
       ? DATA.filter(d=>d.cluster===activeCluster).length
       : DATA.length;
@@ -522,6 +637,32 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
   }
   document.querySelectorAll('.cluster-btn').forEach(btn=>{
     btn.addEventListener('click', ()=> setCluster(btn.dataset.cluster));
+  });
+
+  // ---- mode toggle (Listings / Sales Comps) ----
+  function setMode(newMode){
+    mode = (mode === newMode) ? null : newMode;
+    DATA = mode === null ? [...LISTINGS, ...SALES] : (mode==='sales' ? SALES : LISTINGS);
+    document.querySelectorAll('.mode-btn').forEach(b=>{
+      b.classList.toggle('active', b.dataset.mode === mode);
+    });
+    boundsCache = computeBounds(DATA);
+    initialBounds = boundsCache.initial;
+    clusterBounds = boundsCache.byCluster;
+    renderCountyChips();
+    renderTenancyChips();
+    renderTableHeader();
+    renderSortOptions();
+    updateRibbonText();
+    updateDateFilterVisibility();
+    document.getElementById('totalCount').textContent = activeCluster
+      ? DATA.filter(d=>d.cluster===activeCluster).length
+      : DATA.length;
+    render();
+    if(initialBounds) map.fitBounds(boundsForCurrentView(), {padding:[24,24]});
+  }
+  document.querySelectorAll('.mode-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> setMode(btn.dataset.mode));
   });
 
   // ---- live number formatting for the range filter inputs ----
@@ -568,15 +709,25 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
       render();
     });
   });
+  ['dateFrom','dateTo'].forEach(id=>{
+    document.getElementById(id).addEventListener('change', (e)=>{
+      filterState[id] = e.target.value || null;
+      render();
+    });
+  });
+  function updateDateFilterVisibility(){
+    document.getElementById('dateFilterGroup').style.display = (mode==='listings') ? 'none' : '';
+  }
 
   document.getElementById('resetBtn').addEventListener('click', ()=>{
     activeCounties.clear();
     activeTenancy.clear();
-    document.querySelectorAll('#tenancyChips .chip').forEach(c=>c.classList.remove('active'));
     document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
     document.getElementById('searchBox').value=''; searchTerm='';
-    document.getElementById('sortSel').value='address-asc'; sortMode='address-asc';
+    renderSortOptions();
     rangeIds.forEach(id=>{ document.getElementById(id).value=''; filterState[id]=null; });
+    document.getElementById('dateFrom').value=''; document.getElementById('dateTo').value='';
+    filterState.dateFrom = null; filterState.dateTo = null;
     favoritesOnly = false;
     document.getElementById('favToggle').classList.remove('active');
     document.getElementById('favToggle').textContent = '♡ Favorites only';
@@ -591,6 +742,7 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
       activeTenancy: [...activeTenancy],
       sortMode, searchTerm,
       cluster: activeCluster,
+      mode,
     };
   }
 
@@ -599,20 +751,32 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
   }
 
   function applyFilterSnapshot(snap){
+    mode = (snap.mode !== undefined) ? snap.mode : 'listings';
+    DATA = mode === null ? [...LISTINGS, ...SALES] : (mode==='sales' ? SALES : LISTINGS);
+    document.querySelectorAll('.mode-btn').forEach(b=>{
+      b.classList.toggle('active', b.dataset.mode === mode);
+    });
+    boundsCache = computeBounds(DATA);
+    initialBounds = boundsCache.initial;
+    clusterBounds = boundsCache.byCluster;
+    renderTableHeader();
+    updateDateFilterVisibility();
+
     activeCluster = snap.cluster || null;
     document.querySelectorAll('.cluster-btn').forEach(b=>{
       b.classList.toggle('active', b.dataset.cluster === activeCluster);
     });
     document.body.classList.toggle('cluster-idw', activeCluster === 'Inland Desert West');
-    document.getElementById('ribbonText').textContent = RIBBON_TEXT[String(activeCluster)];
+    updateRibbonText();
     document.getElementById('totalCount').textContent = activeCluster
       ? DATA.filter(d=>d.cluster===activeCluster).length
       : DATA.length;
 
-    filterState = { sfMin:null, sfMax:null, priceMin:null, priceMax:null, landMin:null, landMax:null, psfMin:null, psfMax:null, ...(snap.filterState||{}) };
+    filterState = { sfMin:null, sfMax:null, priceMin:null, priceMax:null, landMin:null, landMax:null, psfMin:null, psfMax:null, dateFrom:null, dateTo:null, ...(snap.filterState||{}) };
     activeCounties = new Set(snap.activeCounties || []);
     activeTenancy = new Set(snap.activeTenancy || []);
-    sortMode = snap.sortMode || 'address-asc';
+    renderSortOptions();
+    sortMode = snap.sortMode || sortMode;
     searchTerm = snap.searchTerm || '';
 
     document.getElementById('searchBox').value = searchTerm;
@@ -622,12 +786,12 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
       const el = document.getElementById(id);
       el.value = (v==null) ? '' : formatLive(String(v), rangeConfig[id]);
     });
+    document.getElementById('dateFrom').value = filterState.dateFrom || '';
+    document.getElementById('dateTo').value = filterState.dateTo || '';
     renderCountyChips(); // rebuilds scoped to the restored cluster, preserving matching selections
-    document.querySelectorAll('#tenancyChips .chip').forEach(c=>{
-      c.classList.toggle('active', [...activeTenancy].some(name=>chipLabelMatches(c,name)));
-    });
+    renderTenancyChips();
     render();
-    map.fitBounds(boundsForCurrentView(), {padding:[24,24]});
+    if(initialBounds) map.fitBounds(boundsForCurrentView(), {padding:[24,24]});
   }
 
   function renderPresetsUI(){
@@ -683,31 +847,48 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
     render();
   });
   document.getElementById('exportFavBtn').addEventListener('click', ()=>{
-    const favList = DATA.filter(d=>isFavorite(d.id));
-    if(!favList.length){
+    const favListings = LISTINGS.filter(d=>isFavorite(d.id));
+    const favSales = SALES.filter(d=>isFavorite(d.id));
+    if(!favListings.length && !favSales.length){
       alert('No favorited properties yet — heart a few properties first, then export.');
       return;
     }
-    const rows = favList.map(d=>({
-      'Property ID': d.id,
-      'Tenancy': d.tenancy,
-      'Address': d.address,
-      'City': d.city,
-      'County': d.county,
-      'Submarket': d.submarket,
-      'Market': d.market,
-      'Building SF': d.buildingSF,
-      'Land (ac)': d.landAC,
-      'Price': d.price,
-      '$/PSF Building': d.psfBuilding,
-      '$/PSF Land': d.psfLand,
-      '% Leased': d.leased,
-      'Building Class': d.bldgClass,
-      'Year Built': d.yearBuilt,
-      'Drive from Glendale (mi)': d.driveMi,
-      'Google Maps Link': d.gmaps,
-      'User Notes': getNote(d.id),
-    }));
+    const rows = [
+      ...favListings.map(d=>({
+        'Record Type': 'Listing',
+        'ID': d.id,
+        'Tenancy': d.tenancy,
+        'Address': d.address,
+        'City': d.city,
+        'County': d.county,
+        'Building SF': d.buildingSF,
+        'Land (ac)': d.landAC,
+        'Price': d.price,
+        '$/PSF': d.psfBuilding,
+        'Sale Date': '',
+        'Year Built': d.yearBuilt,
+        'Drive from Glendale (mi)': d.driveMi,
+        'Google Maps Link': d.gmaps,
+        'User Notes': getNote(d.id),
+      })),
+      ...favSales.map(d=>({
+        'Record Type': 'Sale Comp',
+        'ID': d.id,
+        'Tenancy': '',
+        'Address': d.address,
+        'City': d.city,
+        'County': d.county,
+        'Building SF': d.buildingSF,
+        'Land (ac)': d.landAC,
+        'Price': d.salePrice,
+        '$/PSF': d.pricePerSF,
+        'Sale Date': fmtDate(d.saleDate) || '',
+        'Year Built': d.yearBuilt,
+        'Drive from Glendale (mi)': d.driveMi,
+        'Google Maps Link': d.gmaps,
+        'User Notes': getNote(d.id),
+      })),
+    ];
     const ws = XLSX.utils.json_to_sheet(rows);
     ws['!cols'] = Object.keys(rows[0]).map(k => ({ wch: Math.max(14, k.length + 2) }));
     const wb = XLSX.utils.book_new();
@@ -722,40 +903,58 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
     location.reload();
   });
 
-  document.querySelectorAll('thead th').forEach(th=>{
-    if(!th.dataset.key) return;
-    th.addEventListener('click', ()=>{
-      const key = th.dataset.key;
-      sortDir[key] = (sortDir[key]||1) * -1;
-      sortMode = 'col:'+key;
-      document.querySelectorAll('thead th').forEach(t=>t.classList.remove('sorted'));
-      th.classList.add('sorted');
-      render();
-    });
-  });
+  function isSaleRecord(d){ return d.salePrice !== undefined; }
+  function recPrice(d){ return isSaleRecord(d) ? d.salePrice : d.price; }
+  function recPSF(d){ return isSaleRecord(d) ? d.pricePerSF : d.psfBuilding; }
+  function haversineMiles(lat1, lon1, lat2, lon2){
+    const R = 3958.8;
+    const toRad = x => x * Math.PI / 180;
+    const dphi = toRad(lat2-lat1), dlambda = toRad(lon2-lon1);
+    const a = Math.sin(dphi/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dlambda/2)**2;
+    return 2 * R * Math.asin(Math.sqrt(a));
+  }
 
   function filteredSorted(){
     let list = DATA.filter(d=>{
       if(activeCluster && d.cluster !== activeCluster) return false;
       if(favoritesOnly && !isFavorite(d.id)) return false;
       if(activeCounties.size && !activeCounties.has(d.county)) return false;
-      if(activeTenancy.size && !activeTenancy.has(d.tenancy)) return false;
-      if(searchTerm && !(d.address.toLowerCase().includes(searchTerm) || d.city.toLowerCase().includes(searchTerm))) return false;
+      // tenancy and sale-date filters only constrain the record type they apply to;
+      // the other record type passes through unaffected (relevant once both are shown together)
+      if(!isSaleRecord(d) && activeTenancy.size && !activeTenancy.has(d.tenancy)) return false;
+      if(isSaleRecord(d) && (filterState.dateFrom || filterState.dateTo)){
+        if(!d.saleDate) return false;
+        if(filterState.dateFrom && d.saleDate < filterState.dateFrom) return false;
+        if(filterState.dateTo && d.saleDate > filterState.dateTo) return false;
+      }
+      if(searchTerm && !(
+        d.address.toLowerCase().includes(searchTerm) ||
+        d.city.toLowerCase().includes(searchTerm) ||
+        (d.buyerCompany && d.buyerCompany.toLowerCase().includes(searchTerm)) ||
+        (d.sellerCompany && d.sellerCompany.toLowerCase().includes(searchTerm))
+      )) return false;
       if(filterState.sfMin!=null && d.buildingSF < filterState.sfMin) return false;
       if(filterState.sfMax!=null && d.buildingSF > filterState.sfMax) return false;
-      if(filterState.priceMin!=null && d.price < filterState.priceMin) return false;
-      if(filterState.priceMax!=null && d.price > filterState.priceMax) return false;
+      if(filterState.priceMin!=null && recPrice(d) < filterState.priceMin) return false;
+      if(filterState.priceMax!=null && recPrice(d) > filterState.priceMax) return false;
       if(filterState.landMin!=null && (d.landAC==null || d.landAC < filterState.landMin)) return false;
       if(filterState.landMax!=null && (d.landAC==null || d.landAC > filterState.landMax)) return false;
-      if(filterState.psfMin!=null && d.psfBuilding < filterState.psfMin) return false;
-      if(filterState.psfMax!=null && d.psfBuilding > filterState.psfMax) return false;
+      if(filterState.psfMin!=null && recPSF(d) < filterState.psfMin) return false;
+      if(filterState.psfMax!=null && recPSF(d) > filterState.psfMax) return false;
       return true;
     });
     if(sortMode.startsWith('col:')){
       const key = sortMode.slice(4);
       const dir = sortDir[key]||1;
+      const getVal = (d) => {
+        if(key==='price') return recPrice(d);
+        if(key==='psf') return recPSF(d);
+        if(key==='date') return d.saleDate || '';
+        if(key==='status') return isSaleRecord(d) ? 1 : 0;
+        return d[key];
+      };
       list.sort((a,b)=>{
-        let av=a[key], bv=b[key];
+        let av=getVal(a), bv=getVal(b);
         if(av==null) av = typeof bv==='number' ? -Infinity : '';
         if(bv==null) bv = typeof av==='number' ? -Infinity : '';
         if(typeof av === 'string') return dir*av.localeCompare(bv);
@@ -764,25 +963,37 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
     } else {
       const cmp = {
         'address-asc': (a,b)=>a.address.localeCompare(b.address),
-        'price-asc': (a,b)=>a.price-b.price,
-        'price-desc': (a,b)=>b.price-a.price,
-        'psf-asc': (a,b)=>a.psfBuilding-b.psfBuilding,
+        'price-asc': (a,b)=>recPrice(a)-recPrice(b),
+        'price-desc': (a,b)=>recPrice(b)-recPrice(a),
+        'psf-asc': (a,b)=>recPSF(a)-recPSF(b),
         'size-desc': (a,b)=>b.buildingSF-a.buildingSF,
         'drive-asc': (a,b)=>(a.driveMi||9999)-(b.driveMi||9999),
-      }[sortMode];
+        'date-desc': (a,b)=>(b.saleDate||'').localeCompare(a.saleDate||''),
+      }[sortMode] || ((a,b)=>a.address.localeCompare(b.address));
       list.sort(cmp);
     }
     return list;
   }
 
-  const dataPoints = DATA.filter(d=>d.lat!=null).map(d=>[d.lat,d.lon]);
-  const initialBounds = L.latLngBounds(dataPoints);
-  const clusterBounds = {};
-  [...new Set(DATA.map(d=>d.cluster))].forEach(cl=>{
-    const pts = DATA.filter(d=>d.cluster===cl && d.lat!=null).map(d=>[d.lat,d.lon]);
-    if(pts.length) clusterBounds[cl] = L.latLngBounds(pts);
-  });
+  function computeBounds(dataset){
+    const pts = dataset.filter(d=>d.lat!=null).map(d=>[d.lat,d.lon]);
+    const initial = pts.length ? L.latLngBounds(pts) : null;
+    const byCluster = {};
+    [...new Set(dataset.map(d=>d.cluster))].forEach(cl=>{
+      const cpts = dataset.filter(d=>d.cluster===cl && d.lat!=null).map(d=>[d.lat,d.lon]);
+      if(cpts.length) byCluster[cl] = L.latLngBounds(cpts);
+    });
+    return { initial, byCluster };
+  }
+  let boundsCache = computeBounds(DATA);
+  let initialBounds = boundsCache.initial;
+  let clusterBounds = boundsCache.byCluster;
   function boundsForCurrentView(){
+    if(activeCounties.size){
+      const scoped = activeCluster ? DATA.filter(d=>d.cluster===activeCluster) : DATA;
+      const pts = scoped.filter(d=>activeCounties.has(d.county) && d.lat!=null).map(d=>[d.lat,d.lon]);
+      if(pts.length) return L.latLngBounds(pts);
+    }
     return (activeCluster && clusterBounds[activeCluster]) ? clusterBounds[activeCluster] : initialBounds;
   }
 
@@ -840,20 +1051,91 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
       if(d.lat==null) return;
       const liked = isFavorite(d.id);
       const size = 12;
+      const dotColor = isSaleRecord(d) ? getCss('--sold-dot') : getCss('--pin');
       const icon = liked
         ? L.divIcon({
             html:`<div class="marker-heart" style="width:${size}px;height:${size}px;">♥</div>`,
             className:'', iconSize:[size,size], iconAnchor:[size/2,size/2]
           })
         : L.divIcon({
-            html:`<div class="marker-pin" style="width:${size}px;height:${size}px;background:${getCss('--pin')}"></div>`,
+            html:`<div class="marker-pin" style="width:${size}px;height:${size}px;background:${dotColor}"></div>`,
             className:'', iconSize:[size,size], iconAnchor:[size/2,size/2]
           });
       const m = L.marker([d.lat,d.lon], {icon});
-      m.bindPopup(`<b>${liked?'♥ ':''}${d.address}</b><br>${d.city}, ${d.county} Co.<br>${fmtMoney(d.price)} · $${d.psfBuilding}/SF<br><button class="popup-detail-btn" onclick="window.__raeOpenDetail('${d.id}')">View details →</button>`);
+      const popupHtml = isSaleRecord(d)
+        ? `<b>${liked?'♥ ':''}${d.address}</b><br>${d.city}, ${d.county} Co.<br>${fmtMoney(d.salePrice)} · ${fmtPSF(d.pricePerSF)}/SF · Sold ${fmtDate(d.saleDate)||'—'}<br><button class="popup-detail-btn" onclick="window.__raeOpenDetail('${d.id}')">View details →</button>`
+        : `<b>${liked?'♥ ':''}${d.address}</b><br>${d.city}, ${d.county} Co.<br>${fmtMoney(d.price)} · ${fmtPSF(d.psfBuilding)}/SF<br><button class="popup-detail-btn" onclick="window.__raeOpenDetail('${d.id}')">View details →</button>`;
+      m.bindPopup(popupHtml);
       m.on('click', ()=>openDetail(d.id));
       markerIndex[d.id]=m;
       markerLayer.addLayer(m);
+    });
+  }
+
+  const sortSel = document.getElementById('sortSel');
+  function renderSortOptions(){
+    const opts = mode==='sales'
+      ? [
+          ['address-asc','Address (A → Z)'], ['date-desc','Sale Date (most recent)'],
+          ['price-asc','Sale Price (low → high)'], ['price-desc','Sale Price (high → low)'],
+          ['psf-asc','$/PSF (low → high)'], ['size-desc','Building Size (large → small)'],
+          ['drive-asc','Est. drive from Glendale'],
+        ]
+      : mode==='listings'
+      ? [
+          ['address-asc','Address (A → Z)'], ['price-asc','Price (low → high)'],
+          ['price-desc','Price (high → low)'], ['psf-asc','$/PSF Building (low → high)'],
+          ['size-desc','Building Size (large → small)'], ['drive-asc','Est. drive from Glendale'],
+        ]
+      : [
+          ['address-asc','Address (A → Z)'], ['date-desc','Sale Date (most recent sold first)'],
+          ['price-asc','Price (low → high)'], ['price-desc','Price (high → low)'],
+          ['psf-asc','$/PSF (low → high)'], ['size-desc','Building Size (large → small)'],
+          ['drive-asc','Est. drive from Glendale'],
+        ];
+    sortSel.innerHTML = opts.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+    sortMode = opts[0][0];
+    sortSel.value = sortMode;
+  }
+
+  const tableHead = document.getElementById('tableHead');
+  function renderTableHeader(){
+    const cols = mode==='sales'
+      ? [
+          ['', '', ''], ['address','Address',''], ['city','City',''], ['county','County',''],
+          ['status','Status',''], ['tenancy','Tenancy',''],
+          ['buildingSF','Building SF','num'], ['landAC','Land (ac)','num'],
+          ['price','Sale Price','num'], ['psf','$/PSF','num'],
+          ['date','Sale Date','num'], ['notes','Notes',''],
+        ]
+      : mode==='listings'
+      ? [
+          ['', '', ''], ['address','Address',''], ['city','City',''], ['county','County',''],
+          ['status','Status',''], ['tenancy','Tenancy',''],
+          ['buildingSF','Building SF','num'], ['landAC','Land (ac)','num'],
+          ['price','Price','num'], ['psfBuilding','$/PSF Bldg','num'], ['psfLand','$/PSF Land','num'],
+          ['notes','User Notes',''],
+        ]
+      : [
+          ['', '', ''], ['address','Address',''], ['city','City',''], ['county','County',''],
+          ['status','Status',''], ['tenancy','Tenancy',''],
+          ['buildingSF','Building SF','num'], ['landAC','Land (ac)','num'],
+          ['price','Price','num'], ['psf','$/PSF','num'], ['date','Date','num'],
+          ['notes','Notes',''],
+        ];
+    tableHead.innerHTML = `<tr>${cols.map(([key,label,cls])=>
+      key ? `<th data-key="${key}"${cls?` class="${cls}"`:''}>${label}</th>` : '<th></th>'
+    ).join('')}</tr>`;
+    tableHead.querySelectorAll('th[data-key]').forEach(th=>{
+      if(th.dataset.key==='notes') return; // not sortable
+      th.addEventListener('click', ()=>{
+        const key = th.dataset.key;
+        sortDir[key] = (sortDir[key]||1) * -1;
+        sortMode = 'col:'+key;
+        tableHead.querySelectorAll('th').forEach(t=>t.classList.remove('sorted'));
+        th.classList.add('sorted');
+        render();
+      });
     });
   }
 
@@ -863,18 +1145,60 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
     const rows = list.map(d=>{
       const liked = isFavorite(d.id);
       const note = getNote(d.id);
+      const heartCell = `<td class="heart-cell"><button class="heart-btn" data-heart-id="${d.id}" title="${liked?'Remove from favorites':'Add to favorites'}">${liked?'♥':'♡'}</button></td>`;
+      const sale = isSaleRecord(d);
+      const statusCell = `<td><span class="${sale?'sale-tag':'tenancy-tag'}">${sale?'Sold':'For Sale'}</span></td>`;
+      const tenancyCell = d.tenancy
+        ? `<td><span class="tenancy-tag${d.tenancy==='Single-Tenant'?' single':''}">${d.tenancy==='Single-Tenant'?'Single':'Multi'}</span></td>`
+        : `<td>—</td>`;
+      if(mode==='sales'){
+        return `
+        <tr data-id="${d.id}">
+          ${heartCell}
+          <td>${d.address}</td>
+          <td>${d.city}</td>
+          <td>${d.county}</td>
+          ${statusCell}
+          ${tenancyCell}
+          <td class="num">${fmtSF(d.buildingSF)}</td>
+          <td class="num">${d.landAC!=null?fmtAC(d.landAC):'—'}</td>
+          <td class="num">${fmtMoney(d.salePrice)}</td>
+          <td class="num">${d.pricePerSF!=null?fmtPSF(d.pricePerSF):'—'}</td>
+          <td class="num">${fmtDate(d.saleDate)||'—'}</td>
+          <td class="notes-cell${note?'':' empty'}">${note ? note.replace(/</g,'&lt;') : 'No notes'}</td>
+        </tr>`;
+      }
+      if(mode==='listings'){
+        return `
+        <tr data-id="${d.id}">
+          ${heartCell}
+          <td>${d.address}</td>
+          <td>${d.city}</td>
+          <td>${d.county}</td>
+          ${statusCell}
+          ${tenancyCell}
+          <td class="num">${fmtSF(d.buildingSF)}</td>
+          <td class="num">${d.landAC!=null?fmtAC(d.landAC):'—'}</td>
+          <td class="num">${fmtMoney(d.price)}</td>
+          <td class="num">${fmtPSF(d.psfBuilding)}</td>
+          <td class="num">${d.psfLand!=null?fmtPSF(d.psfLand):'—'}</td>
+          <td class="notes-cell${note?'':' empty'}">${note ? note.replace(/</g,'&lt;') : 'No notes'}</td>
+        </tr>`;
+      }
+      // combined: Listings + Sales Comps shown together
       return `
       <tr data-id="${d.id}">
-        <td class="heart-cell"><button class="heart-btn" data-heart-id="${d.id}" title="${liked?'Remove from favorites':'Add to favorites'}">${liked?'♥':'♡'}</button></td>
+        ${heartCell}
         <td>${d.address}</td>
         <td>${d.city}</td>
         <td>${d.county}</td>
-        <td><span class="tenancy-tag${d.tenancy==='Single-Tenant'?' single':''}">${d.tenancy==='Single-Tenant'?'Single':'Multi'}</span></td>
+        ${statusCell}
+        ${tenancyCell}
         <td class="num">${fmtSF(d.buildingSF)}</td>
-        <td class="num">${d.landAC!=null?d.landAC:'—'}</td>
-        <td class="num">${fmtMoney(d.price)}</td>
-        <td class="num">$${d.psfBuilding}</td>
-        <td class="num">${d.psfLand!=null?'$'+d.psfLand:'—'}</td>
+        <td class="num">${d.landAC!=null?fmtAC(d.landAC):'—'}</td>
+        <td class="num">${fmtMoney(recPrice(d))}</td>
+        <td class="num">${recPSF(d)!=null?fmtPSF(recPSF(d)):'—'}</td>
+        <td class="num">${sale?(fmtDate(d.saleDate)||'—'):'—'}</td>
         <td class="notes-cell${note?'':' empty'}">${note ? note.replace(/</g,'&lt;') : 'No notes'}</td>
       </tr>`;
     }).join('');
@@ -905,58 +1229,26 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
   const panel = document.getElementById('detailPanel');
   function stat(label, value){ return `<div class="stat"><div class="stat-label">${label}</div><div class="stat-value">${value}</div></div>`; }
 
-  function openDetail(id, panMap){
+  let detailBackId = null;
+  function openDetail(id, panMap, backTo){
     selectedId = id;
-    const d = DATA.find(x=>x.id===id);
+    const d = LISTINGS.find(x=>x.id===id) || SALES.find(x=>x.id===id);
     if(!d) return;
     if(panMap && d.lat!=null){ map.setView([d.lat,d.lon], 12, {animate:true}); markerIndex[id] && markerIndex[id].openPopup(); }
-    const om = OMS[d.id];
-    const excerpts = d.excerptImages || [];
+    detailBackId = backTo || null;
 
-    panel.innerHTML = `
-      <button class="detail-close" id="closeBtn">✕</button>
-      <div class="d-heart-row">
-        <div class="d-addr" style="margin:0;">${d.address}</div>
-        <button class="heart-btn" id="detailHeartBtn" title="${isFavorite(d.id)?'Remove from favorites':'Add to favorites'}">${isFavorite(d.id)?'♥':'♡'}</button>
-      </div>
-      <div class="d-sub">${d.city}, ${d.county} County · ${d.zip} · ${d.submarket} (${d.market}) · <span class="tenancy-tag${d.tenancy==='Single-Tenant'?' single':''}">${d.tenancy}</span></div>
-      <div class="stat-grid">
-        ${stat('Building Size', fmtSF(d.buildingSF)+' SF')}
-        ${stat('Land Size', d.landAC!=null? d.landAC+' ac':'—')}
-        ${stat('Sale Price', fmtMoney(d.price))}
-        ${stat('$/PSF Building', '$'+d.psfBuilding)}
-        ${stat('$/PSF Land', d.psfLand!=null? '$'+d.psfLand:'—')}
-        ${stat('% Leased', d.leased!=null? d.leased+'%':'Not reported')}
-        ${stat('Investment Type', d.investType||'—')}
-        ${stat('Building Class / Year', (d.bldgClass||'—')+' · '+(d.yearBuilt||'—'))}
-        ${stat('Est. Drive from Glendale', d.driveMi!=null? '~'+Math.round(d.driveMi*1.25/62*60)+' min ('+d.driveMi+' mi)':'—')}
-        ${stat('Tenant Mix (CoStar)', d.secType||'—')}
-      </div>
-      ${d.propertyDesc ? `<div class="d-section"><h4>Property</h4><p>${d.propertyDesc}</p></div>` : ''}
-      ${d.tenantDesc ? `<div class="d-section"><h4>Tenancy</h4><p>${d.tenantDesc}</p></div>` : ''}
-      ${d.cityDesc ? `<div class="d-section"><h4>Location</h4><p>${d.cityDesc}</p></div>` : ''}
-      <div class="d-section">
-        <h4>Broker of Record</h4>
-        <div class="contact-line">${d.salesCompany || 'Not listed'}${d.salesContact? ' · '+d.salesContact : ''}${d.salesPhone? ' · '+d.salesPhone : ''}</div>
-      </div>
-      <div class="btn-row">
-        <a class="btn primary" href="${d.gmaps}" target="_blank" rel="noopener">Open in Google Maps</a>
-      </div>
-      <div class="d-section" style="margin-top:18px;">
-        <h4>User Notes</h4>
-        <textarea id="notesBox" placeholder="Notes are saved in this browser only — not shared with other users or devices.">${getNote(d.id)}</textarea>
-        <div class="notes-saved" id="notesSaved"></div>
-      </div>
-      <div class="d-section" style="margin-top:18px;">
-        <h4>Listing Flyer</h4>
-        ${excerpts.length ? `<div class="excerpt-gallery">${excerpts.map(img=>`<img src="images/${img}" alt="Listing flyer page" onclick="window.open('images/${img}','_blank')">`).join('')}</div>` : `<p class="empty-note">No flyer excerpt available for this property.</p>`}
-      </div>
-      <div class="d-section" style="margin-top:18px;">
-        <h4>Offering Memorandum</h4>
-        <div class="om-box">${om ? `<a class="btn brass" href="${om}" target="_blank" rel="noopener">📄 View OM</a>` : `<span class="empty-note">No OM attached. Add the PDF to the repo root and a line to oms.json to attach one (see README).</span>`}</div>
-      </div>
-    `;
+    if(isSaleRecord(d)){
+      renderSaleDetail(d);
+    } else {
+      renderListingDetail(d);
+    }
+    overlay.classList.add('open');
+  }
+
+  function wireCommonDetailHandlers(d){
     document.getElementById('closeBtn').addEventListener('click', closeDetail);
+    const marketBtn = document.getElementById('detailMarketBtn');
+    if(marketBtn) marketBtn.addEventListener('click', ()=>{ openMarketInfoFor([d.county]); });
     document.getElementById('detailHeartBtn').addEventListener('click', (e)=>{
       toggleFavorite(d.id);
       const liked = isFavorite(d.id);
@@ -977,12 +1269,290 @@ async function loadJSON(path){ const r = await fetch(path); return r.json(); }
         buildTable(filteredSorted());
       }, 400);
     });
-    overlay.classList.add('open');
   }
-  function closeDetail(){ overlay.classList.remove('open'); selectedId=null; }
+
+  function nearbyComps(d, radiusMiles){
+    if(d.lat==null) return [];
+    return SALES
+      .filter(s=>s.lat!=null && haversineMiles(d.lat,d.lon,s.lat,s.lon) <= radiusMiles)
+      .sort((a,b)=>(b.salePrice||0)-(a.salePrice||0));
+  }
+
+  function renderListingDetail(d){
+    const om = OMS[d.id];
+    const excerpts = d.excerptImages || [];
+    const comps = nearbyComps(d, 1);
+    panel.innerHTML = `
+      <button class="detail-close" id="closeBtn">✕</button>
+      <div class="d-heart-row">
+        <div class="d-addr" style="margin:0;">${d.address}</div>
+        <button class="heart-btn" id="detailHeartBtn" title="${isFavorite(d.id)?'Remove from favorites':'Add to favorites'}">${isFavorite(d.id)?'♥':'♡'}</button>
+      </div>
+      <div class="d-sub">${d.city}, ${d.county} County · ${d.zip} · ${d.submarket} (${d.market}) · <span class="tenancy-tag${d.tenancy==='Single-Tenant'?' single':''}">${d.tenancy}</span></div>
+      <div class="stat-grid">
+        ${stat('Building Size', fmtSF(d.buildingSF)+' SF')}
+        ${stat('Land Size', d.landAC!=null? fmtAC(d.landAC)+' ac':'—')}
+        ${stat('Sale Price', fmtMoney(d.price))}
+        ${stat('$/PSF Building', fmtPSF(d.psfBuilding))}
+        ${stat('$/PSF Land', d.psfLand!=null? fmtPSF(d.psfLand):'—')}
+        ${stat('% Leased', d.leased!=null? d.leased+'%':'Not reported')}
+        ${stat('Investment Type', d.investType||'—')}
+        ${stat('Building Class / Year', (d.bldgClass||'—')+' · '+(d.yearBuilt||'—'))}
+        ${stat('Est. Drive from Glendale', d.driveMi!=null? '~'+Math.round(d.driveMi*1.25/62*60)+' min ('+d.driveMi+' mi)':'—')}
+        ${stat('Tenant Mix (CoStar)', d.secType||'—')}
+      </div>
+      ${d.propertyDesc ? `<div class="d-section"><h4>Property</h4><p>${d.propertyDesc}</p></div>` : ''}
+      ${d.tenantDesc ? `<div class="d-section"><h4>Tenancy</h4><p>${d.tenantDesc}</p></div>` : ''}
+      ${d.cityDesc ? `<div class="d-section"><h4>Location</h4><p>${d.cityDesc}</p></div>` : ''}
+      <div class="d-section">
+        <h4>Broker of Record</h4>
+        <div class="contact-line">${d.salesCompany || 'Not listed'}${d.salesContact? ' · '+d.salesContact : ''}${d.salesPhone? ' · '+d.salesPhone : ''}</div>
+      </div>
+      <div class="btn-row">
+        <a class="btn primary" href="${d.gmaps}" target="_blank" rel="noopener">Open in Google Maps</a>
+        <button type="button" class="btn" id="detailMarketBtn">📊 County Quick Stats</button>
+      </div>
+      <div class="d-section" style="margin-top:18px;">
+        <h4>Sale Comps Within 1 Mile${comps.length? ' ('+comps.length+')':''}</h4>
+        ${comps.length ? `
+          <table class="comp-mini-table">
+            <thead><tr><td>Date</td><td>Address</td><td class="num">Sale Price</td><td class="num">$/PSF Bldg</td></tr></thead>
+            <tbody>
+              ${comps.slice(0,5).map(c=>`
+                <tr class="comp-row" data-comp-id="${c.id}">
+                  <td>${fmtDate(c.saleDate)||'—'}</td>
+                  <td>${c.address}</td>
+                  <td class="num">${fmtMoney(c.salePrice)}</td>
+                  <td class="num">${c.pricePerSF!=null?fmtPSF(c.pricePerSF):'—'}</td>
+                </tr>`).join('')}
+            </tbody>
+            ${comps.length > 5 ? `
+            <tbody id="compsMoreRows" style="display:none;">
+              ${comps.slice(5).map(c=>`
+                <tr class="comp-row" data-comp-id="${c.id}">
+                  <td>${fmtDate(c.saleDate)||'—'}</td>
+                  <td>${c.address}</td>
+                  <td class="num">${fmtMoney(c.salePrice)}</td>
+                  <td class="num">${c.pricePerSF!=null?fmtPSF(c.pricePerSF):'—'}</td>
+                </tr>`).join('')}
+            </tbody>` : ''}
+          </table>
+          ${comps.length > 5 ? `<button type="button" class="btn-outline comp-see-more" id="compsSeeMoreBtn">See ${comps.length - 5} more ▾</button>` : ''}
+        ` : `<p class="empty-note">No sale comps found within 1 mile.</p>`}
+      </div>
+      <div class="d-section" style="margin-top:18px;">
+        <h4>Listing Flyer</h4>
+        ${excerpts.length ? `<div class="excerpt-gallery">${excerpts.map(img=>`<img src="images/${img}" alt="Listing flyer page" onclick="window.open('images/${img}','_blank')">`).join('')}</div>` : `<p class="empty-note">No flyer excerpt available for this property.</p>`}
+      </div>
+      <div class="d-section" style="margin-top:18px;">
+        <h4>Offering Memorandum</h4>
+        <div class="om-box">${om ? `<a class="btn brass" href="${om}" target="_blank" rel="noopener">📄 View OM</a>` : `<span class="empty-note">No OM attached. Add the PDF to the repo root and a line to oms.json to attach one (see README).</span>`}</div>
+      </div>
+      <div class="d-section" style="margin-top:18px;">
+        <h4>User Notes</h4>
+        <textarea id="notesBox" placeholder="Notes are saved in this browser only — not shared with other users or devices.">${getNote(d.id)}</textarea>
+        <div class="notes-saved" id="notesSaved"></div>
+      </div>
+    `;
+    panel.querySelectorAll('.comp-row').forEach(tr=>{
+      tr.addEventListener('click', ()=>openDetail(tr.dataset.compId, true, d.id));
+    });
+    const seeMoreBtn = document.getElementById('compsSeeMoreBtn');
+    if(seeMoreBtn){
+      const moreRows = document.getElementById('compsMoreRows');
+      const extraCount = comps.length - 5;
+      seeMoreBtn.addEventListener('click', ()=>{
+        const showing = moreRows.style.display !== 'none';
+        moreRows.style.display = showing ? 'none' : '';
+        seeMoreBtn.textContent = showing ? `See ${extraCount} more ▾` : `See less ▴`;
+      });
+    }
+    wireCommonDetailHandlers(d);
+  }
+
+  function renderSaleDetail(d){
+    const title = d.propertyName ? `${d.address} · ${d.propertyName}` : d.address;
+    const buyerLine = [d.buyerCompany, d.buyerType, d.buyerOrigin].filter(Boolean).join(' · ') || 'Not reported';
+    const sellerLine = [d.sellerCompany, d.sellerType, d.sellerOrigin].filter(Boolean).join(' · ') || 'Not reported';
+    const listingBrokerLine = [d.listingBrokerCompany, d.listingBrokerAgent, d.listingBrokerPhone].filter(Boolean).join(' · ') || 'Not listed';
+    panel.innerHTML = `
+      <button class="detail-close" id="closeBtn">✕</button>
+      <div class="d-heart-row">
+        <div class="d-addr" style="margin:0;">${title}</div>
+        <button class="heart-btn" id="detailHeartBtn" title="${isFavorite(d.id)?'Remove from favorites':'Add to favorites'}">${isFavorite(d.id)?'♥':'♡'}</button>
+      </div>
+      <div class="d-sub">${d.city}, ${d.county} County, ${d.state}${d.submarket? ' · '+d.submarket+' Submarket':''} · ${d.propertyType||'Retail'}${d.secType?' ('+d.secType+')':''} · <span class="sale-tag">Sold ${fmtDate(d.saleDate)||''}</span></div>
+      <div class="stat-grid">
+        ${stat('Asking Price', d.askingPrice!=null? fmtMoney(d.askingPrice):'Not reported')}
+        ${stat('Sale Price', fmtMoney(d.salePrice) + (d.askingPrice? ' ('+Math.round(d.salePrice/d.askingPrice*100)+'% of asking)':''))}
+        ${stat('Building Size', fmtSF(d.buildingSF)+' SF')}
+        ${stat('$/PSF', d.pricePerSF!=null? fmtPSF(d.pricePerSF):'—')}
+        ${stat('Land Size', d.landAC!=null? fmtAC(d.landAC)+' ac':'—')}
+        ${stat('$/PSF Land', d.pricePerSFLand!=null? fmtPSF(d.pricePerSFLand):'—')}
+        ${stat('Sale Type / Condition', (d.saleType||'—')+(d.saleCondition? ' · '+d.saleCondition:''))}
+        ${stat('Cap Rate', d.capRate!=null? d.capRate+'%':'Not reported')}
+        ${stat('Building Class / Year', (d.bldgClass||'—')+' · '+(d.yearBuilt||'—'))}
+        ${stat('Hold Period', d.holdPeriod||'—')}
+        ${stat('Est. Drive from Glendale', d.driveMi!=null? '~'+Math.round(d.driveMi*1.25/62*60)+' min ('+d.driveMi+' mi)':'—')}
+        ${stat('Net Operating Income', d.netIncome!=null? fmtMoney(d.netIncome):'Not reported')}
+      </div>
+      ${d.transactionNotes ? `<div class="d-section"><h4>Transaction Notes</h4><p>${d.transactionNotes}</p></div>` : ''}
+      <div class="d-section">
+        <h4>Buyer</h4>
+        <div class="contact-line">${buyerLine}${d.buyersBrokerCompany? ' · Buyer’s broker: '+d.buyersBrokerCompany : ''}</div>
+      </div>
+      <div class="d-section">
+        <h4>Seller</h4>
+        <div class="contact-line">${sellerLine}</div>
+      </div>
+      <div class="d-section">
+        <h4>Listing Broker</h4>
+        <div class="contact-line">${listingBrokerLine}</div>
+      </div>
+      ${(d.zoning || d.frontage || d.parkingSpaces || d.amenities) ? `
+      <div class="d-section">
+        <h4>Property Details</h4>
+        <div class="contact-line">
+          ${d.zoning? 'Zoning: '+d.zoning+'<br>' : ''}
+          ${d.frontage? 'Frontage: '+d.frontage+'<br>' : ''}
+          ${d.parkingSpaces? 'Parking: '+d.parkingSpaces+' spaces<br>' : ''}
+          ${d.amenities? 'Amenities: '+d.amenities : ''}
+        </div>
+      </div>` : ''}
+      <div class="btn-row">
+        <a class="btn primary" href="${d.gmaps}" target="_blank" rel="noopener">Open in Google Maps</a>
+        <button type="button" class="btn" id="detailMarketBtn">📊 County Quick Stats</button>
+      </div>
+      <div class="d-section" style="margin-top:18px;">
+        <h4>User Notes</h4>
+        <textarea id="notesBox" placeholder="Notes are saved in this browser only — not shared with other users or devices.">${getNote(d.id)}</textarea>
+        <div class="notes-saved" id="notesSaved"></div>
+      </div>
+    `;
+    wireCommonDetailHandlers(d);
+  }
+  function closeDetail(){
+    if(detailBackId){
+      const backId = detailBackId;
+      detailBackId = null;
+      openDetail(backId, false);
+    } else {
+      overlay.classList.remove('open');
+      selectedId = null;
+    }
+  }
   window.__raeOpenDetail = (id) => openDetail(id, true);
   overlay.addEventListener('click', (e)=>{ if(e.target===overlay) closeDetail(); });
 
+  // ---------------- county market information ----------------
+  const marketOverlay = document.getElementById('marketOverlay');
+  const marketPanel = document.getElementById('marketPanel');
+  const MARKET_CATEGORIES = [
+    { key: 'demographic', label: 'Demographics' },
+    { key: 'disposableIncome', label: 'Disposable Income' },
+    { key: 'netWorth', label: 'Net Worth' },
+    { key: 'expenditure', label: 'Consumer Expenditure' },
+  ];
+  let marketCounty = null;
+  let marketCategory = 'demographic';
+
+  function fmtMarketValue(row){
+    let out;
+    const v = row.value;
+    if(typeof v === 'number'){
+      if(Math.abs(v) < 1 && v !== 0){
+        out = (v*100).toLocaleString('en-US', {maximumFractionDigits:2}) + '%';
+      } else if(Number.isInteger(v)){
+        out = v.toLocaleString('en-US');
+      } else {
+        out = v.toLocaleString('en-US', {maximumFractionDigits:2});
+      }
+    } else {
+      out = String(v);
+    }
+    if(row.pct) out += ` (${row.pct})`;
+    return out;
+  }
+  function fmtExpRow(row){
+    const parts = [];
+    if(row.average != null) parts.push('$' + row.average.toLocaleString('en-US', {maximumFractionDigits:2}));
+    if(row.index != null) parts.push(`Index ${row.index}`);
+    return parts.join(' · ') || '—';
+  }
+
+  function renderMarketBody(){
+    const data = DEMOGRAPHICS[marketCounty];
+    const body = document.getElementById('marketBody');
+    if(!body) return;
+    if(!data){
+      body.innerHTML = '<p class="empty-note">No market information available for this county yet.</p>';
+      return;
+    }
+    const sections = data[marketCategory] || [];
+    if(!sections.length){
+      body.innerHTML = '<p class="empty-note">No data in this category for this county.</p>';
+      return;
+    }
+    const isExp = marketCategory === 'expenditure';
+    body.innerHTML = `<div class="market-grid">${sections.map(sec => `
+      <div class="market-card">
+        <h4>${escapeHtml(sec.title)}</h4>
+        <table><tbody>
+          ${sec.rows.map(r => `<tr><td class="mv-label">${escapeHtml(r.label)}</td><td class="mv-value">${isExp ? fmtExpRow(r) : fmtMarketValue(r)}</td></tr>`).join('')}
+        </tbody></table>
+      </div>`).join('')}</div>`;
+  }
+
+  function renderMarketPanel(countyList){
+    if(!countyList.includes(marketCounty)) marketCounty = countyList[0];
+    marketPanel.innerHTML = `
+      <button class="market-close" id="marketCloseBtn">✕</button>
+      <div class="market-header">
+        <div>
+          <h3 class="market-title">County Quick Stats</h3>
+          <div class="market-sub">Demographics, income, net worth, and consumer spending by county. Source: Esri, via CBRE.</div>
+        </div>
+      </div>
+      <div class="market-tabs" id="marketCountyTabs"></div>
+      <div class="market-category-tabs" id="marketCategoryTabs"></div>
+      <div id="marketBody"></div>
+    `;
+    const countyTabs = document.getElementById('marketCountyTabs');
+    countyList.forEach(c=>{
+      const tab = document.createElement('button');
+      tab.type = 'button';
+      tab.className = 'market-tab' + (c===marketCounty ? ' active' : '');
+      tab.textContent = c;
+      tab.addEventListener('click', ()=>{ marketCounty = c; renderMarketPanel(countyList); });
+      countyTabs.appendChild(tab);
+    });
+    const catTabs = document.getElementById('marketCategoryTabs');
+    MARKET_CATEGORIES.forEach(cat=>{
+      const tab = document.createElement('button');
+      tab.type = 'button';
+      tab.className = 'market-category-tab' + (cat.key===marketCategory ? ' active' : '');
+      tab.textContent = cat.label;
+      tab.addEventListener('click', ()=>{ marketCategory = cat.key; renderMarketPanel(countyList); });
+      catTabs.appendChild(tab);
+    });
+    document.getElementById('marketCloseBtn').addEventListener('click', closeMarketInfo);
+    renderMarketBody();
+  }
+
+  function openMarketInfoFor(countyList){
+    if(!countyList || !countyList.length) return;
+    renderMarketPanel(countyList);
+    marketOverlay.classList.add('open');
+  }
+  function openMarketInfo(){
+    openMarketInfoFor([...activeCounties].sort());
+  }
+  function closeMarketInfo(){ marketOverlay.classList.remove('open'); }
+  marketOverlay.addEventListener('click', (e)=>{ if(e.target===marketOverlay) closeMarketInfo(); });
+
+  renderTableHeader();
+  renderSortOptions();
+  updateDateFilterVisibility();
   render();
 })();
 </script>
